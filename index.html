@@ -6,16 +6,43 @@ var jsonld = {
     "@type" : "void:Dataset",
     "subject" : [ "http://dbpedia.org/resource/Proceedings", "http://dbpedia.org/resource/Journal", "http://dbpedia.org/resource/Computer_science" ],
     "homepage" : "http://www4.wiwiss.fu-berlin.de/dblp/all"
-  }, {
+  }, 
+  {
     "@id" : "DBpedia",
     "@type" : "void:Dataset",
-    "subset" : "DBpedia2DBLP",
     "homepage" : "http://dbpedia.org/"
-  }, {
+  }, 
+  {
+    "@id" : "LinkedMDB",
+    "@type" : "void:Dataset",
+    "homepage" : "http://linkedmdb.org/"
+  }, 
+  {
+    "@id" : "Bio2RDF",
+    "@type" : "void:Dataset",
+    "homepage" : "http://bio2rdf.org/"
+  }, 
+  {
     "@id" : "DBpedia2DBLP",
     "@type" : "void:Linkset",
     "target" : [ "DBLP", "DBpedia" ]
-  } ],
+  }, 
+  {
+    "@id" : "Bio2RDF2DBLP",
+    "@type" : "void:Linkset",
+    "target" : [ "Bio2RDF", "DBpedia" ]
+  }, 
+  {
+    "@id" : "DBLP2DBpedia",
+    "@type" : "void:Linkset",
+    "target" : [ "DBpedia", "DBLP" ]
+  }, 
+  {
+    "@id" : "LinkedMDB_DBpedia",
+    "@type" : "void:Linkset",
+    "target" : [ "LinkedMDB", "DBpedia" ]
+  } 
+  ],
   "@context" : {
     "subset" : {
       "@id" : "http://rdfs.org/ns/void#subset",
@@ -121,36 +148,6 @@ function getCenter($circle) {
 
     return { top: (pos.top + (height / 2)), left: (pos.left + (width/2)) };
 }
-function connectCircles($c1, $c2) {
-    var center1 = getCenter($c1);
-    var center2 = getCenter($c2);
-
-    var arrow = createArrow(center1, center2);
-    $(document.body).append(arrow);
-}
-function lineDistance( point1, point2 )
-{
-  var xs = 0;
-  var ys = 0;
-
-  xs = point2.left - point1.left;
-  xs = xs * xs;
-
-  ys = point2.top - point1.top;
-  ys = ys * ys;
-
-  return Math.sqrt( xs + ys );
-}
-function createArrow(center1, center2) {
-    var $arrow = $('#tmpl .arrow').clone();
-    $arrow.css({
-        top: center1.top,
-        left: center1.left,
-        width:lineDistance(center1, center2)
-    });
-    return $arrow;
-    
-}
 function connect($c1, $c2, color, thickness) {
     var center1 = getCenter($c1);
     var center2 = getCenter($c2);
@@ -175,19 +172,55 @@ function connect($c1, $c2, color, thickness) {
 }
 
 
+var min_x = 0;
+var max_x = 700;
+var min_y = 0;
+var max_y = 400;
+var filled_areas = [];
+function check_overlap(area) {
+    for (var i = 0; i < filled_areas.length; i++) {
+        
+        check_area = filled_areas[i];
+        
+        var bottom1 = area.y + area.height;
+        var bottom2 = check_area.y + check_area.height;
+        var top1 = area.y;
+        var top2 = check_area.y;
+        var left1 = area.x;
+        var left2 = check_area.x;
+        var right1 = area.x + area.width;
+        var right2 = check_area.x + check_area.width;
+        if (bottom1 < top2 || top1 > bottom2 || right1 < left2 || left1 > right2) {
+            continue;
+        }
+        return true;
+    }
+    return false;
+}
 $(function() {
 
 var graph = jsonld['@graph'];
-var x = 300;
 for(var i=0; i<graph.length; i++) {
     var obj = graph[i];
     if(obj['@type'] == 'void:Dataset') {
         var circle = createCircle(obj['@id'], 1)
         circle.addClass(obj['@id']);
-        circle.css({top: x, left: x });
-        x = x-150;
         $(document.body)
             .append(circle)
+
+        var rand_x=0;
+        var rand_y=0;
+        var area;
+        do {
+            rand_x = Math.round(min_x + ((max_x - min_x)*(Math.random() % 1)));
+            rand_y = Math.round(min_y + ((max_y - min_y)*(Math.random() % 1)));
+            area = {x: rand_x, y: rand_y, width: circle.width(), height: circle.height()};
+        } while(check_overlap(area));
+
+        filled_areas.push(area);
+
+        circle.css({left:rand_x, top: rand_y});
+
     } else if(obj['@type'] == 'void:Linkset') {
         connect($('.circle.'+obj.target[0]), $('.circle.'+obj.target[1]), '#0f0', 5);
     }
