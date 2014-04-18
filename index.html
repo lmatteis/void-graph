@@ -1,5 +1,9 @@
+<script src="jquery.min.js"></script>
 <style>
-.circle
+.circle {
+    position: absolute;
+}
+.circle .inner
 {
     height: 100px;
     width: 100px;
@@ -19,7 +23,7 @@ box-shadow: 10px 10px 51px -29px rgba(0,0,0,0.75);
 .arrow {
 width: 120px;
 height: 6px;
-position: relative;
+position: absolute;
 
 }
 
@@ -50,16 +54,84 @@ transform: rotate(180deg);
 left: -5px;
 }
 </style>
-<div class="circle">Music-<br>brainz</div>
+<script>
+function createCircle(text, zoom) {
+    var $circle = $('#tmpl .circle').clone();
+    $circle.find('.inner').text(text);
+    if(zoom) {
+        $circle.css({zoom:zoom});
+    }
+    return $circle;
+}
+function getCenter($circle) {
+    var pos = $circle.position();
 
-<div class="arrow">
-<div class="line"></div>
-<div class="point right"></div>
-</div>
-<br><br>
-<div class="arrow">
-<div class="line"></div>
-<div class="point right"></div>
-<div class="point left"></div>
+    var width = $circle.width();
+    var height = $circle.height();
+
+    return { top: (pos.top + (height / 2)), left: (pos.left + (width/2)) };
+}
+function connectCircles($c1, $c2) {
+    var center1 = getCenter($c1);
+    var center2 = getCenter($c2);
+
+    var arrow = createArrow(center1, center2);
+    $(document.body).append(arrow);
+}
+function lineDistance( point1, point2 )
+{
+  var xs = 0;
+  var ys = 0;
+
+  xs = point2.left - point1.left;
+  xs = xs * xs;
+
+  ys = point2.top - point1.top;
+  ys = ys * ys;
+
+  return Math.sqrt( xs + ys );
+}
+function createArrow(center1, center2) {
+    var $arrow = $('#tmpl .arrow').clone();
+    $arrow.css({
+        top: center1.top,
+        left: center1.left,
+        width:lineDistance(center1, center2)
+    });
+    return $arrow;
+    
+}
+
+$(function() {
+
+var $c1 = createCircle('Luca is awesome', 1)
+var $c2 = createCircle('JSON-LD', 1);
+
+$c2.css({ top: '200px', left: '500px' })
+
+$(document.body)
+    .append($c1)
+    .append($c2)
+
+
+connectCircles($c1, $c2);
+
+
+});
+
+</script>
+<div id="tmpl" style="display: none">
+    <div class="circle"><div class="inner">Music-<br>brainz</div></div>
+    <div class="arrow">
+        <div class="line"></div>
+        <div class="point right"></div>
+    </div>
+    <!--
+    <div class="arrow">
+        <div class="line"></div>
+        <div class="point right"></div>
+        <div class="point left"></div>
+    </div>
+    -->
 </div>
 
