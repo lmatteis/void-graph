@@ -1,6 +1,56 @@
 <script src="jquery.min.js"></script>
+<script>
+var jsonld = {
+  "@graph" : [ {
+    "@id" : "DBLP",
+    "@type" : "void:Dataset",
+    "subject" : [ "http://dbpedia.org/resource/Proceedings", "http://dbpedia.org/resource/Journal", "http://dbpedia.org/resource/Computer_science" ],
+    "homepage" : "http://www4.wiwiss.fu-berlin.de/dblp/all"
+  }, {
+    "@id" : "DBpedia",
+    "@type" : "void:Dataset",
+    "subset" : "DBpedia2DBLP",
+    "homepage" : "http://dbpedia.org/"
+  }, {
+    "@id" : "DBpedia2DBLP",
+    "@type" : "void:Linkset",
+    "target" : [ "DBLP", "DBpedia" ]
+  } ],
+  "@context" : {
+    "subset" : {
+      "@id" : "http://rdfs.org/ns/void#subset",
+      "@type" : "@id"
+    },
+    "homepage" : {
+      "@id" : "http://xmlns.com/foaf/0.1/homepage",
+      "@type" : "@id"
+    },
+    "subject" : {
+      "@id" : "http://purl.org/dc/terms/subject",
+      "@type" : "@id"
+    },
+    "target" : {
+      "@id" : "http://rdfs.org/ns/void#target",
+      "@type" : "@id"
+    },
+    "@base" : "http://example.com/",
+    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
+    "foaf" : "http://xmlns.com/foaf/0.1/",
+    "sd" : "http://www.w3.org/ns/sparql-service-description#",
+    "xsd" : "http://www.w3.org/2001/XMLSchema#",
+    "owl" : "http://www.w3.org/2002/07/owl#",
+    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+    "void" : "http://rdfs.org/ns/void#",
+    "wv" : "http://vocab.org/waiver/terms/norms",
+    "dcterms" : "http://purl.org/dc/terms/"
+  }
+};
+
+
+</script>
 <style>
 .circle {
+    z-index: 1;
     position: absolute;
 }
 .circle .inner
@@ -101,20 +151,48 @@ function createArrow(center1, center2) {
     return $arrow;
     
 }
+function connect($c1, $c2, color, thickness) {
+    var center1 = getCenter($c1);
+    var center2 = getCenter($c2);
+
+    // bottom right
+    var x1 = center1.left;
+    var y1 = center1.top;
+    // top right
+    var x2 = center2.left;
+    var y2 = center2.top;
+    // distance
+    var length = Math.sqrt(((x2-x1) * (x2-x1)) + ((y2-y1) * (y2-y1)));
+    // center
+    var cx = ((x1 + x2) / 2) - (length / 2);
+    var cy = ((y1 + y2) / 2) - (thickness / 2);
+    // angle
+    var angle = Math.atan2((y1-y2),(x1-x2))*(180/Math.PI);
+    // make arrow
+    var $arrow = $("<div class='arrow' style='padding:0px; margin:0px; position:absolute; left:" + cx + "px; top:" + cy + "px; width:" + length + "px; -moz-transform:rotate(" + angle + "deg); -webkit-transform:rotate(" + angle + "deg); -o-transform:rotate(" + angle + "deg); -ms-transform:rotate(" + angle + "deg); transform:rotate(" + angle + "deg);'><div class='line'></div><div class='point right' style='right: "+(($c2.width()/2)-4)+"px'></div></div>");
+        
+    $(document.body).append($arrow);
+}
+
 
 $(function() {
 
-var $c1 = createCircle('Luca is awesome', 1)
-var $c2 = createCircle('JSON-LD', 1);
+var graph = jsonld['@graph'];
+var x = 300;
+for(var i=0; i<graph.length; i++) {
+    var obj = graph[i];
+    if(obj['@type'] == 'void:Dataset') {
+        var circle = createCircle(obj['@id'], 1)
+        circle.addClass(obj['@id']);
+        circle.css({top: x, left: x });
+        x = x-150;
+        $(document.body)
+            .append(circle)
+    } else if(obj['@type'] == 'void:Linkset') {
+        connect($('.circle.'+obj.target[0]), $('.circle.'+obj.target[1]), '#0f0', 5);
+    }
 
-$c2.css({ top: '200px', left: '500px' })
-
-$(document.body)
-    .append($c1)
-    .append($c2)
-
-
-connectCircles($c1, $c2);
+}
 
 
 });
