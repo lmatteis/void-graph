@@ -1,19 +1,20 @@
 <html>
 <head>
 <script src="jquery.min.js"></script>
+
 <script src="n3-browser.min.js"></script>
 <script src="jsonld.js"></script>
 
 <style>
+body {
+    font-size: 14px;
+    font-family: Tahoma;
+}
 .circle {
     z-index: 1;
     position: absolute;
-}
-.circle .inner
-{
     height: 100px;
     width: 100px;
-    display: table-cell;
     text-align: center;
     vertical-align: middle;
     border-radius: 50%;
@@ -25,6 +26,10 @@
 -webkit-box-shadow: 10px 10px 51px -29px rgba(0,0,0,0.75);
 -moz-box-shadow: 10px 10px 51px -29px rgba(0,0,0,0.75);
 box-shadow: 10px 10px 51px -29px rgba(0,0,0,0.75);
+}
+.circle .inner
+{
+    position: absolute;
 }
 .arrow {
 width: 120px;
@@ -60,13 +65,16 @@ transform: rotate(180deg);
 left: -5px;
 }
 </style>
+
 <script>
 function createCircle(text, zoom) {
     var $circle = $('#tmpl .circle').clone();
-    $circle.find('.inner').text(text);
-    if(zoom) {
-        $circle.css({zoom:zoom});
-    }
+    var $inner = $circle.find('.inner')
+    $inner.text(text);
+    $inner.css({
+        top: $circle.height() / 2
+
+    });
     return $circle;
 }
 function getCenter($circle) {
@@ -95,7 +103,7 @@ function connect($c1, $c2, color, thickness) {
     // angle
     var angle = Math.atan2((y1-y2),(x1-x2))*(180/Math.PI);
     // make arrow
-    var $arrow = $("<div class='arrow' style='padding:0px; margin:0px; position:absolute; left:" + cx + "px; top:" + cy + "px; width:" + length + "px; -moz-transform:rotate(" + angle + "deg); -webkit-transform:rotate(" + angle + "deg); -o-transform:rotate(" + angle + "deg); -ms-transform:rotate(" + angle + "deg); transform:rotate(" + angle + "deg);'><div class='line'></div><div class='point right' style='right: "+(($c2.width()/2)-4)+"px'></div></div>");
+    var $arrow = $("<div class='arrow' style='z-index:-1;padding:0px; margin:0px; position:absolute; left:" + cx + "px; top:" + cy + "px; width:" + length + "px; -moz-transform:rotate(" + angle + "deg); -webkit-transform:rotate(" + angle + "deg); -o-transform:rotate(" + angle + "deg); -ms-transform:rotate(" + angle + "deg); transform:rotate(" + angle + "deg);'><div class='line'></div><div class='point right' style='right: "+(($c1.width()/2))+"px'></div></div>");
         
     $('#cont').append($arrow);
 }
@@ -133,12 +141,12 @@ function parseTextarea() {
     var parser = N3.Parser();
     var N3Util = N3.Util;
     var ntriples = '';
-    parser.parse($('textarea').val(),
-    function (error, triple, prefixes) {
+    parser.parse($('textarea').val(), function (error, triple, prefixes) {
         if(!triple) {
             convertToJsonLD(ntriples);
             return;
         }
+        return console.log(triple);
         var object = triple.object;
         if(N3Util.isUri(object)) {
             object = '<' + object + '>';
@@ -148,6 +156,7 @@ function parseTextarea() {
 }
 
 function convertToJsonLD(nt) {
+    return console.log(nt);
 
     jsonld.fromRDF(nt, {format: 'application/nquads'}, function(err, doc) {
       // doc is JSON-LD
@@ -155,14 +164,15 @@ function convertToJsonLD(nt) {
     });
 }
 
-function parseJsonLd(jsonld) {
+function parseJsonLd(jsonldDoc) {
+    return console.log(jsonldDoc);
     var graph = jsonld['@graph'];
-    if(!graph) graph = jsonld;
+    if(!graph) graph = jsonldDoc;
 
+    filled_areas = []; // reset it otherwise leaks
     for(var i=0; i<graph.length; i++) {
         var obj = graph[i];
         if($.inArray('http://rdfs.org/ns/void#Dataset', obj['@type']) > -1) {
-            console.log(1)
             var title = obj['http://purl.org/dc/terms/title']
             if(title && title.length) {
                 title = title[0]['@value'];
@@ -170,39 +180,12 @@ function parseJsonLd(jsonld) {
             if(!title) {
                 title = obj['@id']
             }
-            var circle = createCircle(title, 1)
+            var circle = createCircle(title)
             circle.attr('id', obj['@id']);
             $('#cont')
                 .append(circle)
 
-            var rand_x=0;
-            var rand_y=0;
-            var area;
-            do {
-                rand_x = Math.round(min_x + ((max_x - min_x)*(Math.random() % 1)));
-                rand_y = Math.round(min_y + ((max_y - min_y)*(Math.random() % 1)));
-                area = {x: rand_x, y: rand_y, width: circle.width(), height: circle.height()};
-            } while(check_overlap(area));
-
-            filled_areas.push(area);
-
-            circle.css({
-                left:rand_x, 
-                top: rand_y
-            });
-
-            /*
-            // random size
-            var min = 70;
-            var max = 160;
-            // and the formula is:
-            var random = Math.floor(Math.random() * (max - min + 1)) + min;
-            circle.find('.inner').css({
-                width: random,
-                height: random
-
-            });
-            */
+            positionCircle(circle);
 
         }
     }
@@ -230,12 +213,57 @@ function parseJsonLd(jsonld) {
 
 }
 
-
 $('button.parse').click(function() {
     $('#cont').html('');
+    $('svg').remove();
     parseTextarea();    
 });
 });
+
+function positionCircle(circle) {
+    // random size
+    var totalWidth = 0;
+    var min = 70;
+    var max = 160;
+    // and the formula is:
+    var random = Math.floor(Math.random() * (max - min + 1)) + min;
+    circle.css({
+        width: random,
+        height: random
+    });
+
+    // adjust inner text
+    var fontSize = 14 - max;
+    var $inner = circle.find('.inner');
+    var innerHeight = $inner.height();
+    var innerWidth = $inner.width();
+    $inner.css({
+        top: (circle.height() / 2) - (innerHeight / 2),
+        left: (circle.width() / 2) - (innerWidth / 2),
+        'font-size': fontSize + 'px'
+
+
+    });
+
+
+    // put circle randomly in position
+    var rand_x=0;
+    var rand_y=0;
+    var area;
+    do {
+        rand_x = Math.round(min_x + ((max_x - min_x)*(Math.random() % 1)));
+        rand_y = Math.round(min_y + ((max_y - min_y)*(Math.random() % 1)));
+        area = {x: rand_x, y: rand_y, width: circle.width(), height: circle.height()};
+    } while(check_overlap(area));
+
+    filled_areas.push(area);
+
+    circle.css({
+        left:rand_x, 
+        top: rand_y
+    });
+
+}
 
 </script>
 </head>
@@ -254,8 +282,7 @@ $('button.parse').click(function() {
     </div>
     -->
 </div>
-<div id="cont"></div>
-<div style="margin-top: 450px;">
+<div style="">
 Enter VoID:<br>
 <textarea style="width: 600px; height: 300px;">
 @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
@@ -291,5 +318,7 @@ Enter VoID:<br>
 <br>
 <button class="parse">parse</button>
 </div>
+<div style="position:relative;" id="cont"></div>
 </body>
+</html>
 
