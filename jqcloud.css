@@ -12,48 +12,49 @@ div.jqcloud a {
 }
 
 div.jqcloud span.w10 { 
-width:140px !important; 
-height:140px !important;
-font-size: 290%; }
+width:190px !important; 
+height:190px !important;
+font-size: 230%; }
 div.jqcloud span.w9 { 
-width:130px !important; 
-height:130px !important;
-font-size: 280%; }
+width:180px !important; 
+height:180px !important;
+font-size: 220%; }
 div.jqcloud span.w8 { 
-width:120px !important; 
-height:120px !important;
+width:170px !important; 
+height:170px !important;
 
-font-size: 270%; }
+font-size: 210%; }
 div.jqcloud span.w7 { 
-width:110px !important; 
-height:110px !important;
-font-size: 160%; }
+width:160px !important; 
+height:160px !important;
+font-size: 200%; }
 div.jqcloud span.w6 { 
-width:100px !important; 
-height:100px !important;
+width:150px !important; 
+height:150px !important;
 
 font-size: 150%; }
 div.jqcloud span.w5 { 
 
-width:90px !important; 
-height:90px !important;
+width:140px !important; 
+height:140px !important;
 font-size: 140%; }
 div.jqcloud span.w4 { 
 
-width:80px !important; 
-height:80px !important;
+width:130px !important; 
+height:130px !important;
 font-size: 130%; }
 div.jqcloud span.w3 { 
-width:70px !important; 
-height:70px !important;
+width:120px !important; 
+height:120px !important;
 font-size: 120%; }
 
 div.jqcloud span.w2 { 
-width:60px !important; 
-height:60px !important;
+width:110px !important; 
+height:110px !important;
 font-size: 110%; }
 
-div.jqcloud span.w1 { width:50px !important; height:50px !important; font-size: 100%; }
+div.jqcloud span.w1 { 
+width:100px !important; height:100px !important; font-size: 100%; }
 
 /* colors */
 

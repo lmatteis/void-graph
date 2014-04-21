@@ -15,17 +15,16 @@ height: 1000px;
     font-family: Tahoma;
 }
 #cont {
-    width: 800px;
-    height: 800px;
+    width: 1000px;
+    height: 1000px;
 }
-#cont span, .circle {
+.circle {
     z-index: 1;
     position: relative;
     float: left;
     display: table-cell;
-    margin: 20px;
-    height: 100px;
-    width: 100px;
+    height: 80%;
+    width: 80%;
     text-align: center;
     vertical-align: middle;
     border-radius: 50%;
@@ -36,6 +35,7 @@ height: 1000px;
 -webkit-box-shadow: 10px 10px 51px -29px rgba(0,0,0,0.75);
 -moz-box-shadow: 10px 10px 51px -29px rgba(0,0,0,0.75);
 box-shadow: 10px 10px 51px -29px rgba(0,0,0,0.75);
+    overflow: hidden;
 }
 .inner
 {
@@ -84,7 +84,7 @@ function createCircle(text, zoom) {
     return $circle;
 }
 function getCenter($circle) {
-    var pos = $circle.position();
+    var pos = $circle.offset();
 
     // add the margin
     var margin = parseInt($circle.css('margin'), 10);
@@ -116,7 +116,7 @@ function connect($c1, $c2, color, thickness) {
     // make arrow
     var $arrow = $("<div class='arrow' style='z-index:-1;padding:0px; margin:0px; position:absolute; left:" + cx + "px; top:" + cy + "px; width:" + length + "px; -moz-transform:rotate(" + angle + "deg); -webkit-transform:rotate(" + angle + "deg); -o-transform:rotate(" + angle + "deg); -ms-transform:rotate(" + angle + "deg); transform:rotate(" + angle + "deg);'><div class='line'></div><div class='point right' style='right: "+(($c1.width()/2))+"px'></div></div>");
         
-    $('#cont').append($arrow);
+    $(document.body).append($arrow);
 }
 
 
@@ -208,11 +208,20 @@ function parseJsonLd(jsonldDoc) {
             if(!title) {
                 title = obj['@id']
             }
-            word_array.push({
-                text: title,
-                weight: Math.random(),
-                uri: obj['@id']
-            });
+
+            var word = {};
+
+            word.text = title;
+            word.uri = obj['@id'];
+            console.log(obj);
+            if(obj['http://rdfs.org/ns/void#triples']) {
+                word.weight = obj['http://rdfs.org/ns/void#triples'][0]['@value'];
+                console.log(word.weight);
+            } else {
+                word.weight = Math.random();
+            }
+
+            word_array.push(word);
 
         }
     }
@@ -221,7 +230,7 @@ function parseJsonLd(jsonldDoc) {
 
         afterCloudRender: function() {
             // adjust text!
-            $('.inner').each(function() {
+            $('.inner, .circle').each(function() {
                 var $this = $(this);
                 var $parent = $this.parent();
                 $this.css({
@@ -238,14 +247,21 @@ function parseJsonLd(jsonldDoc) {
                     if(obj['http://rdfs.org/ns/void#target']) {
                         subject = obj['http://rdfs.org/ns/void#target'][0]['@id'];
                         object = obj['http://rdfs.org/ns/void#target'][1]['@id'];
-                    } else if(obj.objectsTarget) {
-                        subject = obj.subjectsTarget;
-                        object = obj.objectsTarget
+                    } else if(obj['http://rdfs.org/ns/void#objectsTarget']) {
+                        subject = obj['http://rdfs.org/ns/void#subjectsTarget']
+                        object = obj['http://rdfs.org/ns/void#objectsTarget'];
                     }
-                    var subjectCircle = $('[uri="'+subject+'"]');
-                    var objectCircle = $('[uri="'+object+'"]');
-
-                    connect(subjectCircle, objectCircle, '#0f0', 5);
+                    if(subject.length) {
+                        subject = subject[0]['@id'];
+                    }
+                    if(object.length) {
+                        object = object[0]['@id'];
+                    }
+                    var subjectCircle = $('[uri="'+subject+'"] .circle');
+                    var objectCircle = $('[uri="'+object+'"] .circle');
+                    if(subjectCircle.length && objectCircle.length) {
+                        connect(subjectCircle, objectCircle, '#0f0', 5);
+                    }
                 }
             }
         }
@@ -257,6 +273,7 @@ function parseJsonLd(jsonldDoc) {
 
 $('button.parse').click(function() {
     $('#cont').html('');
+    $('.arrow').remove();
     $('svg').remove();
     parseTextarea();    
 });
@@ -332,35 +349,1952 @@ function positionCircle(circle) {
 <div style="">
 Enter VoID:<br>
 <textarea style="width: 600px; height: 300px;">
+@prefix void: <http://rdfs.org/ns/void#> .
 @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
-@prefix foaf: <http://xmlns.com/foaf/0.1/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 @prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix foaf: <http://xmlns.com/foaf/0.1/> .
+@prefix qb: <http://purl.org/linked-data/cube> .
+@prefix skos: <http://www.w3.org/2004/02/skos/core#> .
+@prefix sd: <http://www.w3.org/ns/sparql-service-description#> .
+@prefix : <http://worldbank.270a.info/void.ttl#> .
+@prefix worldbank-dataset: <http://worldbank.270a.info/dataset/> .
+@prefix worldbank-graph: <http://worldbank.270a.info/graph/> .
+@prefix transparency-dataset: <http://transparency.270a.info/dataset/> .
+@prefix ecb-dataset: <http://ecb.270a.info/dataset/> .
+@prefix imf-dataset: <http://imf.270a.info/dataset/> .
+@prefix fao-dataset: <http://fao.270a.info/dataset/> .
+@prefix bfs-dataset: <http://bfs.270a.info/dataset/> .
+
+<http://worldbank.270a.info/void.ttl>
+    a void:DatasetDescription ;
+    dcterms:title "A VoiD Description of the worldbank.270a.info Dataset"@en ;
+    dcterms:creator <http://csarven.ca/#i> ;
+    foaf:primaryTopic worldbank-dataset:worldbank .
+
+
+worldbank-dataset:worldbank
+    a void:Dataset ;
+    foaf:homepage <http://worldbank.270a.info/> ;
+    dcterms:title "World Bank Linked Data"@en ;
+    dcterms:description "World Bank's Indicators, Finances, Projects and Operations, and Climate Change data"@en ;
+    dcterms:source [ foaf:homepage <http://worldbank.org/> ] ;
+    dcterms:publisher [ foaf:homepage <http://csarven.ca/> ] ;
+    dcterms:created "2012-02-29"^^xsd:date ;
+    dcterms:modified "2013-11-04"^^xsd:date ;
+    void:subset
+        worldbank-dataset:void ,
+        worldbank-dataset:meta ,
+        worldbank-dataset:world-bank-indicators ,
+        worldbank-dataset:world-bank-finances ,
+        worldbank-dataset:world-bank-projects-and-operations ,
+        worldbank-dataset:world-bank-climates ;
+    void:triples 173639128 ;
+    dcterms:subject
+        <http://dbpedia.org/resource/World_Bank> ,
+        <http://dbpedia.org/resource/International_financial_institution> ,
+        <http://dbpedia.org/resource/Foreign_investment> ,
+        <http://dbpedia.org/resource/International_trade> ,
+        <http://dbpedia.org/resource/International_Bank_for_Reconstruction_and_Development> ,
+        <http://dbpedia.org/resource/International_Development_Association> ,
+        <http://dbpedia.org/resource/Statistical_survey> ,
+        <http://dbpedia.org/resource/Finance> ,
+        <http://dbpedia.org/resource/Climate_change> ,
+        <http://dbpedia.org/resource/Environment> ;
+    void:sparqlEndpoint <http://worldbank.270a.info/sparql> ;
+    void:feature <http://www.w3.org/ns/formats/RDF_XML> ,
+                 <http://www.w3.org/ns/formats/Turtle> ;
+    .
+
+
+worldbank-dataset:void
+    a sd:Graph, void:Dataset ;
+    dcterms:title "SD+VoID triples"@en ;
+    void:triples 1588 ;
+    void:dataDump <http://worldbank.270a.info/void.ttl> ;
+    .
+
+
+worldbank-dataset:meta
+    a sd:Graph, void:Dataset ;
+    dcterms:title "Metadata and complimentary data used for all the data in the worldbank-dataset:worldbank dataset"@en ;
+    dcterms:source [ foaf:homepage <http://data.worldbank.org/data-catalog> ] ;
+    dcterms:publisher [ foaf:homepage <http://csarven.ca/> ] ;
+    dcterms:created "2012-02-29"^^xsd:date ;
+    dcterms:modified "2013-04-18"^^xsd:date ;
+    void:dataDump <http://worldbank.270a.info/data/meta.tar.gz> ;
+    void:exampleResource
+        <http://worldbank.270a.info/classification/country/CA> ,
+        <http://worldbank.270a.info/classification/currency/CAD> ,
+        <http://worldbank.270a.info/classification/income-level/OEC> ,
+        <http://worldbank.270a.info/classification/indicator/AG.AGR.TRAC.NO> ,
+        <http://worldbank.270a.info/dataset/world-bank-finances/sfv5-tf7p> ,
+        <http://worldbank.270a.info/classification/global-circulation-model/cccma-cgcm3-1> ;
+    void:classPartition [
+        void:class <http://purl.org/linked-data/sdmx#CodeList> ;
+        void:entities 1
+    ], [
+        void:class <http://dbpedia.org/ontology/Country> ;
+        void:entities 214
+    ], [
+        void:class qb:AttributeProperty ;
+        void:entities 2
+    ], [
+        void:class qb:DimensionProperty ;
+        void:entities 78
+    ], [
+        void:class <http://www.w3.org/2004/02/skos/core#Concept> ;
+        void:entities 8085
+    ], [
+        void:class <http://worldbank.270a.info/classification/lending-type/IDX> ;
+        void:entities 6597
+    ], [
+        void:class <http://www.w3.org/2004/02/skos/core#ConceptScheme> ;
+        void:entities 14
+    ], [
+        void:class qb:ComponentSpecification ;
+        void:entities 315
+    ], [
+        void:class qb:MeasureProperty ;
+        void:entities 69
+    ], [
+        void:class <http://purl.org/linked-data/sdmx/2009/code#Currency> ;
+        void:entities 182
+    ], [
+        void:class qb:DataStructureDefinition ;
+        void:entities 48
+    ], [
+        void:class <http://worldbank.270a.info/classification/lending-type/IBD> ;
+        void:entities 7970
+    ], [
+        void:class rdf:Property ;
+        void:entities 151
+    ], [
+        void:class qb:DataSet ;
+        void:entities 50
+    ] ;
+    void:classes 14 ;
+    void:entities 23788 ;
+    void:properties 53 ;
+    void:propertyPartition [
+        void:distinctObjects 32 ;
+        void:distinctSubjects 32 ;
+        void:property <http://www.w3.org/2000/01/rdf-schema#seeAlso> ;
+        void:triples 32
+    ], [
+        void:distinctObjects 3 ;
+        void:distinctSubjects 8 ;
+        void:property <http://purl.org/dc/terms/modified> ;
+        void:triples 8
+    ], [
+        void:distinctObjects 19 ;
+        void:distinctSubjects 4722 ;
+        void:property <http://worldbank.270a.info/property/topic> ;
+        void:triples 5052
+    ], [
+        void:distinctObjects 1 ;
+        void:distinctSubjects 7887 ;
+        void:property <http://purl.org/dc/terms/license> ;
+        void:triples 7887
+    ], [
+        void:distinctObjects 3 ;
+        void:distinctSubjects 3 ;
+        void:property <http://www.w3.org/2004/02/skos/core#closeMatch> ;
+        void:triples 3
+    ], [
+        void:distinctObjects 7912 ;
+        void:distinctSubjects 7935 ;
+        void:property <http://www.w3.org/2004/02/skos/core#prefLabel> ;
+        void:triples 7956
+    ], [
+        void:distinctObjects 49 ;
+        void:distinctSubjects 49 ;
+        void:property qb:structure ;
+        void:triples 49
+    ], [
+        void:distinctObjects 16 ;
+        void:distinctSubjects 22962 ;
+        void:property <http://www.w3.org/2004/02/skos/core#topConceptOf> ;
+        void:triples 22962
+    ], [
+        void:distinctObjects 75 ;
+        void:distinctSubjects 200 ;
+        void:property qb:dimension ;
+        void:triples 200
+    ], [
+        void:distinctObjects 7595 ;
+        void:distinctSubjects 7873 ;
+        void:property <http://purl.org/dc/terms/source> ;
+        void:triples 7877
+    ], [
+        void:distinctObjects 277 ;
+        void:distinctSubjects 5391 ;
+        void:property <http://worldbank.270a.info/property/source-organization> ;
+        void:triples 5391
+    ], [
+        void:distinctObjects 3 ;
+        void:distinctSubjects 8 ;
+        void:property <http://www.w3.org/2004/02/skos/core#scopeNote> ;
+        void:triples 8
+    ], [
+        void:distinctObjects 10 ;
+        void:distinctSubjects 7887 ;
+        void:property <http://purl.org/dc/terms/issued> ;
+        void:triples 7891
+    ], [
+        void:distinctObjects 2 ;
+        void:distinctSubjects 4 ;
+        void:property <http://www.w3.org/2000/01/rdf-schema#subPropertyOf> ;
+        void:triples 4
+    ], [
+        void:distinctObjects 14 ;
+        void:distinctSubjects 23413 ;
+        void:property rdf:type ;
+        void:triples 12476
+    ], [
+        void:distinctObjects 4 ;
+        void:distinctSubjects 4 ;
+        void:property qb:order ;
+        void:triples 4
+    ], [
+        void:distinctObjects 8 ;
+        void:distinctSubjects 8 ;
+        void:property <http://www.w3.org/2004/02/skos/core#altLabel> ;
+        void:triples 8
+    ], [
+        void:distinctObjects 47 ;
+        void:distinctSubjects 50 ;
+        void:property <http://purl.org/dc/terms/title> ;
+        void:triples 50
+    ], [
+        void:distinctObjects 1 ;
+        void:distinctSubjects 7887 ;
+        void:property <http://purl.org/dc/terms/creator> ;
+        void:triples 7887
+    ], [
+        void:distinctObjects 209 ;
+        void:distinctSubjects 209 ;
+        void:property <http://dbpedia.org/property/capital> ;
+        void:triples 209
+    ], [
+        void:distinctObjects 22984 ;
+        void:distinctSubjects 23063 ;
+        void:property <http://www.w3.org/2004/02/skos/core#notation> ;
+        void:triples 23063
+    ], [
+        void:distinctObjects 10 ;
+        void:distinctSubjects 7847 ;
+        void:property <http://purl.org/dc/terms/created> ;
+        void:triples 7847
+    ], [
+        void:distinctObjects 6 ;
+        void:distinctSubjects 246 ;
+        void:property <http://worldbank.270a.info/property/income-level> ;
+        void:triples 246
+    ], [
+        void:distinctObjects 6 ;
+        void:distinctSubjects 144 ;
+        void:property <http://worldbank.270a.info/property/admin-region> ;
+        void:triples 144
+    ], [
+        void:distinctObjects 1 ;
+        void:distinctSubjects 3 ;
+        void:property <http://www.w3.org/2000/01/rdf-schema#range> ;
+        void:triples 3
+    ], [
+        void:distinctObjects 209 ;
+        void:distinctSubjects 209 ;
+        void:property <http://www.w3.org/2003/01/geo/wgs84_pos#lat> ;
+        void:triples 209
+    ], [
+        void:distinctObjects 11 ;
+        void:distinctSubjects 7895 ;
+        void:property <http://www.w3.org/2004/02/skos/core#inScheme> ;
+        void:triples 7895
+    ], [
+        void:distinctObjects 34 ;
+        void:distinctSubjects 42 ;
+        void:property <http://purl.org/dc/terms/description> ;
+        void:triples 42
+    ], [
+        void:distinctObjects 1 ;
+        void:distinctSubjects 6 ;
+        void:property qb:attribute ;
+        void:triples 6
+    ], [
+        void:distinctObjects 182 ;
+        void:distinctSubjects 182 ;
+        void:property <http://worldbank.270a.info/property/numeric-code> ;
+        void:triples 182
+    ], [
+        void:distinctObjects 17 ;
+        void:distinctSubjects 3 ;
+        void:property <http://purl.org/dc/terms/subject> ;
+        void:triples 21
+    ], [
+        void:distinctObjects 48 ;
+        void:distinctSubjects 3 ;
+        void:property <http://purl.org/dc/terms/hasPart> ;
+        void:triples 48
+    ], [
+        void:distinctObjects 4 ;
+        void:distinctSubjects 214 ;
+        void:property <http://worldbank.270a.info/property/lending-type> ;
+        void:triples 214
+    ], [
+        void:distinctObjects 9 ;
+        void:distinctSubjects 10 ;
+        void:property qb:codeList ;
+        void:triples 10
+    ], [
+        void:distinctObjects 23 ;
+        void:distinctSubjects 25 ;
+        void:property <http://www.w3.org/2000/01/rdf-schema#isDefinedBy> ;
+        void:triples 25
+    ], [
+        void:distinctObjects 209 ;
+        void:distinctSubjects 209 ;
+        void:property <http://www.w3.org/2003/01/geo/wgs84_pos#long> ;
+        void:triples 209
+    ], [
+        void:distinctObjects 3 ;
+        void:distinctSubjects 48 ;
+        void:property <http://purl.org/dc/terms/isPartOf> ;
+        void:triples 48
+    ], [
+        void:distinctObjects 5011 ;
+        void:distinctSubjects 5533 ;
+        void:property <http://www.w3.org/2004/02/skos/core#definition> ;
+        void:triples 5574
+    ], [
+        void:distinctObjects 8 ;
+        void:distinctSubjects 246 ;
+        void:property <http://worldbank.270a.info/property/region> ;
+        void:triples 246
+    ], [
+        void:distinctObjects 54 ;
+        void:distinctSubjects 109 ;
+        void:property qb:measure ;
+        void:triples 109
+    ], [
+        void:distinctObjects 201 ;
+        void:distinctSubjects 206 ;
+        void:property <http://www.w3.org/2000/01/rdf-schema#label> ;
+        void:triples 215
+    ], [
+        void:distinctObjects 1 ;
+        void:distinctSubjects 1 ;
+        void:property <http://www.w3.org/2004/02/skos/core#note> ;
+        void:triples 1
+    ], [
+        void:distinctObjects 7517 ;
+        void:distinctSubjects 7517 ;
+        void:property <http://xmlns.com/foaf/0.1/page> ;
+        void:triples 7517
+    ], [
+        void:distinctObjects 4 ;
+        void:distinctSubjects 182 ;
+        void:property <http://worldbank.270a.info/property/minor-unit> ;
+        void:triples 182
+    ], [
+        void:distinctObjects 1 ;
+        void:distinctSubjects 1 ;
+        void:property <http://www.w3.org/2000/01/rdf-schema#comment> ;
+        void:triples 1
+    ], [
+        void:distinctObjects 22962 ;
+        void:distinctSubjects 16 ;
+        void:property <http://www.w3.org/2004/02/skos/core#hasTopConcept> ;
+        void:triples 22962
+    ], [
+        void:distinctObjects 497 ;
+        void:distinctSubjects 497 ;
+        void:property <http://www.w3.org/2004/02/skos/core#exactMatch> ;
+        void:triples 497
+    ], [
+        void:distinctObjects 812 ;
+        void:distinctSubjects 374 ;
+        void:property <http://www.w3.org/2002/07/owl#sameAs> ;
+        void:triples 812
+    ], [
+        void:distinctObjects 262 ;
+        void:distinctSubjects 182 ;
+        void:property <http://worldbank.270a.info/property/using-country> ;
+        void:triples 278
+    ], [
+        void:distinctObjects 23 ;
+        void:distinctSubjects 7243 ;
+        void:property <http://worldbank.270a.info/property/source> ;
+        void:triples 7243
+    ], [
+        void:distinctObjects 315 ;
+        void:distinctSubjects 48 ;
+        void:property qb:component ;
+        void:triples 396
+    ], [
+        void:distinctObjects 39 ;
+        void:distinctSubjects 39 ;
+        void:property <http://purl.org/dc/terms/identifier> ;
+        void:triples 39
+    ], [
+        void:distinctObjects 9 ;
+        void:distinctSubjects 9 ;
+        void:property <http://purl.org/dc/terms/available> ;
+        void:triples 9
+    ] ;
+    void:triples 183547 ;
+    void:vocabulary
+        <http://dbpedia.org/property/> ,
+        <http://purl.org/dc/terms/> ,
+        <http://purl.org/linked-data/cube> ,
+        <http://worldbank.270a.info/property/> ,
+        <http://www.w3.org/1999/02/22-rdf-syntax-ns> ,
+        <http://www.w3.org/2000/01/rdf-schema> ,
+        <http://www.w3.org/2003/01/geo/wgs84_pos> ,
+        <http://www.w3.org/2002/07/owl> ,
+        <http://www.w3.org/2004/02/skos/core> ,
+        <http://xmlns.com/foaf/0.1/> ;
+    .
+
+
+worldbank-dataset:world-bank-indicators
+    a sd:Graph, void:Dataset ;
+    dcterms:title "World Bank Indicators"@en ;
+    dcterms:description "World Bank Indicators data from The World Bank. It contains developmental observations."@en ;
+    dcterms:source [ foaf:homepage <http://data.worldbank.org/indicator> ] ;
+    dcterms:publisher [ foaf:homepage <http://csarven.ca/> ] ;
+    dcterms:created "2012-02-29"^^xsd:date ;
+    dcterms:modified "2013-11-04"^^xsd:date ;
+    dcterms:subject
+        <http://purl.org/linked-data/sdmx/2009/subject#1.2> ,
+        <http://purl.org/linked-data/sdmx/2009/subject#1.3> ,
+        <http://purl.org/linked-data/sdmx/2009/subject#1.4> ,
+        <http://purl.org/linked-data/sdmx/2009/subject#1.6> ,
+        <http://purl.org/linked-data/sdmx/2009/subject#2.4.1> ,
+        <http://purl.org/linked-data/sdmx/2009/subject#2.4.2> ,
+        <http://purl.org/linked-data/sdmx/2009/subject#2.4.3> ,
+        <http://purl.org/linked-data/sdmx/2009/subject#2.4.4> ,
+        <http://purl.org/linked-data/sdmx/2009/subject#2.4.6> ,
+        <http://purl.org/linked-data/sdmx/2009/subject#2.5> ,
+        <http://purl.org/linked-data/sdmx/2009/subject#2.7> ,
+        <http://purl.org/linked-data/sdmx/2009/subject#2.9> ,
+        <http://purl.org/linked-data/sdmx/2009/subject#3.1> ,
+        <http://purl.org/linked-data/sdmx/2009/subject#3.3.1> ,
+        <http://purl.org/linked-data/sdmx/2009/subject#3.3.2> ,
+        <http://purl.org/linked-data/sdmx/2009/subject#3.3.3> ;
+    void:dataDump <http://worldbank.270a.info/data/world-development-indicators.en.tar.gz> ;
+    void:rootResource <http://worldbank.270a.info/dataset/world-bank-indicators> ;
+    void:uriRegexPattern "^http://worldbank\\.270a\\.info/dataset/world-bank-indicators/(.+)/(.+)/(.+)$";
+    void:classPartition [
+        void:class qb:Observation ;
+        void:entities 12382172
+    ] ;
+    void:classes 1 ;
+    void:entities 12382172 ;
+    void:properties 7 ;
+    void:propertyPartition [
+        void:distinctObjects 243 ;
+        void:distinctSubjects 12382172 ;
+        void:property rdf:type ;
+        void:triples 5416390
+    ], [
+        void:distinctObjects 10208 ;
+        void:distinctSubjects 12382172 ;
+        void:property <http://purl.org/linked-data/sdmx/2009/dimension#refPeriod> ;
+        void:triples 12382172
+    ], [
+        void:distinctObjects 334 ;
+        void:distinctSubjects 12382172 ;
+        void:property <http://worldbank.270a.info/property/decimal> ;
+        void:triples 12382172
+    ], [
+        void:distinctObjects 8390305 ;
+        void:distinctSubjects 12382172 ;
+        void:property <http://purl.org/linked-data/sdmx/2009/measure#obsValue> ;
+        void:triples 11448174
+    ], [
+        void:distinctObjects 48916 ;
+        void:distinctSubjects 12382172 ;
+        void:property <http://purl.org/linked-data/sdmx/2009/dimension#refArea> ;
+        void:triples 12382172
+    ], [
+        void:distinctObjects 6951 ;
+        void:distinctSubjects 12382172 ;
+        void:property <http://worldbank.270a.info/property/indicator> ;
+        void:triples 12382172
+    ], [
+        void:distinctObjects 241 ;
+        void:distinctSubjects 12382172 ;
+        void:property qb:dataSet ;
+        void:triples 12382172
+    ] ;
+    void:triples 86687629 ;
+    void:vocabulary
+        <http://purl.org/linked-data/cube> ,
+        <http://purl.org/linked-data/sdmx/2009/dimension> ,
+        <http://purl.org/linked-data/sdmx/2009/measure> ,
+        <http://worldbank.270a.info/property/> ,
+        <http://www.w3.org/1999/02/22-rdf-syntax-ns> ;
+    .
+
+
+worldbank-dataset:world-bank-finances
+    a sd:Graph, void:Dataset ;
+    dcterms:title "World Bank Finances"@en ;
+    dcterms:description "World Bank Finances data from The World Bank. It contains financial observations."@en ;
+    dcterms:source [ foaf:homepage <https://finances.worldbank.org/> ] ;
+    dcterms:publisher [ foaf:homepage <http://csarven.ca/> ] ;
+    dcterms:created "2012-09-29"^^xsd:date ;
+    dcterms:modified "2012-08-10"^^xsd:date ;
+    dcterms:subject
+        <http://purl.org/linked-data/sdmx/2009/subject#2.4.6> ,
+        <http://purl.org/linked-data/sdmx/2009/subject#2.5> ,
+        <http://purl.org/linked-data/sdmx/2009/subject#2.6> ,
+        <http://purl.org/linked-data/sdmx/2009/subject#2.7> ;
+    void:dataDump <http://worldbank.270a.info/data/world-bank-finances.tar.gz> ;
+    void:rootResource <http://worldbank.270a.info/dataset/world-bank-finances> ;
+    void:uriRegexPattern "^http://worldbank\\.270a\\.info/dataset/world-bank-finances/(.+)$";
+    void:classPartition [
+        void:class qb:Observation ;
+        void:entities 269502
+    ] ;
+    void:classes 1 ;
+    void:entities 269502 ;
+    void:properties 141 ;
+    void:propertyPartition [
+        void:distinctObjects 1633 ;
+        void:distinctSubjects 214995 ;
+        void:property <http://worldbank.270a.info/property/repaid-3rd-party> ;
+        void:triples 214995
+    ], [
+        void:distinctObjects 17 ;
+        void:distinctSubjects 416 ;
+        void:property <http://worldbank.270a.info/property/category> ;
+        void:triples 416
+    ], [
+        void:distinctObjects 14 ;
+        void:distinctSubjects 14 ;
+        void:property <http://worldbank.270a.info/property/fy10-amount-us-millions> ;
+        void:triples 14
+    ], [
+        void:distinctObjects 121 ;
+        void:distinctSubjects 17519 ;
+        void:property <http://worldbank.270a.info/property/donor> ;
+        void:triples 17519
+    ], [
+        void:distinctObjects 747 ;
+        void:distinctSubjects 114132 ;
+        void:property <http://worldbank.270a.info/property/guarantor> ;
+        void:triples 121855
+    ], [
+        void:distinctObjects 10741 ;
+        void:distinctSubjects 214995 ;
+        void:property <http://worldbank.270a.info/property/board-approval-date> ;
+        void:triples 214995
+    ], [
+        void:distinctObjects 2 ;
+        void:distinctSubjects 48 ;
+        void:property <http://worldbank.270a.info/property/organization> ;
+        void:triples 48
+    ], [
+        void:distinctObjects 29 ;
+        void:distinctSubjects 530 ;
+        void:property <http://worldbank.270a.info/property/vpu-group> ;
+        void:triples 530
+    ], [
+        void:distinctObjects 2 ;
+        void:distinctSubjects 36 ;
+        void:property <http://worldbank.270a.info/property/period-end-date> ;
+        void:triples 36
+    ], [
+        void:distinctObjects 11 ;
+        void:distinctSubjects 530 ;
+        void:property <http://worldbank.270a.info/property/vpu-type> ;
+        void:triples 530
+    ], [
+        void:distinctObjects 267849 ;
+        void:distinctSubjects 269502 ;
+        void:property <http://purl.org/dc/terms/source> ;
+        void:triples 269502
+    ], [
+        void:distinctObjects 154 ;
+        void:distinctSubjects 3092 ;
+        void:property <http://worldbank.270a.info/property/beneficiary> ;
+        void:triples 3092
+    ], [
+        void:distinctObjects 5316 ;
+        void:distinctSubjects 204293 ;
+        void:property <http://worldbank.270a.info/property/first-repayment-date> ;
+        void:triples 204293
+    ], [
+        void:distinctObjects 12 ;
+        void:distinctSubjects 12 ;
+        void:property <http://worldbank.270a.info/property/commitments-development-policy-lending-us-millions> ;
+        void:triples 12
+    ], [
+        void:distinctObjects 57 ;
+        void:distinctSubjects 59 ;
+        void:property <http://worldbank.270a.info/property/fy12-budget-plan-fy12> ;
+        void:triples 59
+    ], [
+        void:distinctObjects 57 ;
+        void:distinctSubjects 59 ;
+        void:property <http://worldbank.270a.info/property/fy12-budget-plan-fy11> ;
+        void:triples 59
+    ], [
+        void:distinctObjects 12 ;
+        void:distinctSubjects 12 ;
+        void:property <http://worldbank.270a.info/property/principal-repayments-including-prepayments-us-millions> ;
+        void:triples 12
+    ], [
+        void:distinctObjects 14 ;
+        void:distinctSubjects 14 ;
+        void:property <http://worldbank.270a.info/property/fy08-amount-us-millions> ;
+        void:triples 14
+    ], [
+        void:distinctObjects 163 ;
+        void:distinctSubjects 9358 ;
+        void:property <http://worldbank.270a.info/property/program-code> ;
+        void:triples 9358
+    ], [
+        void:distinctObjects 87 ;
+        void:distinctSubjects 14798 ;
+        void:property <http://worldbank.270a.info/property/approval-quarter> ;
+        void:triples 14798
+    ], [
+        void:distinctObjects 6 ;
+        void:distinctSubjects 6 ;
+        void:property <http://worldbank.270a.info/property/credits-outstanding-us-millions> ;
+        void:triples 6
+    ], [
+        void:distinctObjects 18765 ;
+        void:distinctSubjects 213392 ;
+        void:property <http://worldbank.270a.info/property/effective-date-most-recent> ;
+        void:triples 213392
+    ], [
+        void:distinctObjects 28 ;
+        void:distinctSubjects 84 ;
+        void:property <http://worldbank.270a.info/property/ida-statement-of-income-line-item> ;
+        void:triples 84
+    ], [
+        void:distinctObjects 14 ;
+        void:distinctSubjects 14 ;
+        void:property <http://worldbank.270a.info/property/fy11-amount-us-millions> ;
+        void:triples 14
+    ], [
+        void:distinctObjects 7 ;
+        void:distinctSubjects 8051 ;
+        void:property <http://worldbank.270a.info/property/financial-intermediary-funds-commitments-financial-product> ;
+        void:triples 8051
+    ], [
+        void:distinctObjects 22346 ;
+        void:distinctSubjects 210051 ;
+        void:property <http://worldbank.270a.info/property/project> ;
+        void:triples 210051
+    ], [
+        void:distinctObjects 3619 ;
+        void:distinctSubjects 10160 ;
+        void:property <http://worldbank.270a.info/property/paid-in-contributions-to-ibrd-ida-ifc-trust-funds-based-on-fy-of-receipt-trustee-fund> ;
+        void:triples 10160
+    ], [
+        void:distinctObjects 891 ;
+        void:distinctSubjects 1653 ;
+        void:property <http://worldbank.270a.info/property/receipt-amount> ;
+        void:triples 1653
+    ], [
+        void:distinctObjects 53 ;
+        void:distinctSubjects 59 ;
+        void:property <http://worldbank.270a.info/property/fy11-budget-remap> ;
+        void:triples 59
+    ], [
+        void:distinctObjects 172 ;
+        void:distinctSubjects 187 ;
+        void:property <http://worldbank.270a.info/property/total-amounts> ;
+        void:triples 187
+    ], [
+        void:distinctObjects 10873 ;
+        void:distinctSubjects 118362 ;
+        void:property <http://worldbank.270a.info/property/loans-held> ;
+        void:triples 118362
+    ], [
+        void:distinctObjects 3694 ;
+        void:distinctSubjects 214140 ;
+        void:property <http://worldbank.270a.info/property/borrower> ;
+        void:triples 214140
+    ], [
+        void:distinctObjects 12 ;
+        void:distinctSubjects 12 ;
+        void:property <http://worldbank.270a.info/property/gross-disbursements-total-us-millions> ;
+        void:triples 12
+    ], [
+        void:distinctObjects 12 ;
+        void:distinctSubjects 12 ;
+        void:property <http://worldbank.270a.info/property/commitments-total-us-millions> ;
+        void:triples 12
+    ], [
+        void:distinctObjects 62 ;
+        void:distinctSubjects 78 ;
+        void:property <http://worldbank.270a.info/property/bb-us-millions> ;
+        void:triples 78
+    ], [
+        void:distinctObjects 51 ;
+        void:distinctSubjects 118362 ;
+        void:property <http://worldbank.270a.info/property/loan-type> ;
+        void:triples 118362
+    ], [
+        void:distinctObjects 48 ;
+        void:distinctSubjects 59 ;
+        void:property <http://worldbank.270a.info/property/fy11-budget-plan> ;
+        void:triples 59
+    ], [
+        void:distinctObjects 12 ;
+        void:distinctSubjects 12 ;
+        void:property <http://worldbank.270a.info/property/cash-contributions-us-billions> ;
+        void:triples 12
+    ], [
+        void:distinctObjects 172 ;
+        void:distinctSubjects 187 ;
+        void:property <http://worldbank.270a.info/property/shares> ;
+        void:triples 187
+    ], [
+        void:distinctObjects 20127 ;
+        void:distinctSubjects 96633 ;
+        void:property <http://worldbank.270a.info/property/repaid-to-ida> ;
+        void:triples 96633
+    ], [
+        void:distinctObjects 6 ;
+        void:distinctSubjects 6 ;
+        void:property <http://worldbank.270a.info/property/development-grant-expenses-us-millions> ;
+        void:triples 6
+    ], [
+        void:distinctObjects 5813 ;
+        void:distinctSubjects 204308 ;
+        void:property <http://worldbank.270a.info/property/last-repayment-date> ;
+        void:triples 204308
+    ], [
+        void:distinctObjects 14 ;
+        void:distinctSubjects 14 ;
+        void:property <http://worldbank.270a.info/property/fy05-amount-us-millions> ;
+        void:triples 14
+    ], [
+        void:distinctObjects 56 ;
+        void:distinctSubjects 59 ;
+        void:property <http://worldbank.270a.info/property/fy14-indicative-plan-fy12> ;
+        void:triples 59
+    ], [
+        void:distinctObjects 14 ;
+        void:distinctSubjects 14 ;
+        void:property <http://worldbank.270a.info/property/fy07-amount-us-millions> ;
+        void:triples 14
+    ], [
+        void:distinctObjects 6 ;
+        void:distinctSubjects 6 ;
+        void:property <http://worldbank.270a.info/property/undisbursed-grants-us-millions> ;
+        void:triples 6
+    ], [
+        void:distinctObjects 5913 ;
+        void:distinctSubjects 214995 ;
+        void:property <http://worldbank.270a.info/property/exchange-adjustment> ;
+        void:triples 214995
+    ], [
+        void:distinctObjects 17026 ;
+        void:distinctSubjects 118362 ;
+        void:property <http://worldbank.270a.info/property/repaid-to-ibrd> ;
+        void:triples 118362
+    ], [
+        void:distinctObjects 3882 ;
+        void:distinctSubjects 9358 ;
+        void:property <http://worldbank.270a.info/property/grant-name> ;
+        void:triples 9358
+    ], [
+        void:distinctObjects 49 ;
+        void:distinctSubjects 59 ;
+        void:property <http://worldbank.270a.info/property/fy10-budget-plan> ;
+        void:triples 59
+    ], [
+        void:distinctObjects 3652 ;
+        void:distinctSubjects 7359 ;
+        void:property <http://worldbank.270a.info/property/total-contributions-to-ibrd-ida-ifc-trust-funds-summary-based-on-fy-of-agreement-trustee-fund> ;
+        void:triples 7359
+    ], [
+        void:distinctObjects 178 ;
+        void:distinctSubjects 187 ;
+        void:property <http://worldbank.270a.info/property/amounts-subject-to-call> ;
+        void:triples 187
+    ], [
+        void:distinctObjects 43 ;
+        void:distinctSubjects 269502 ;
+        void:property <http://worldbank.270a.info/property/currency> ;
+        void:triples 269502
+    ], [
+        void:distinctObjects 415 ;
+        void:distinctSubjects 6747 ;
+        void:property <http://worldbank.270a.info/property/recipient> ;
+        void:triples 6747
+    ], [
+        void:distinctObjects 126 ;
+        void:distinctSubjects 356 ;
+        void:property <http://worldbank.270a.info/property/percentage-of-total-votes> ;
+        void:triples 356
+    ], [
+        void:distinctObjects 317 ;
+        void:distinctSubjects 357 ;
+        void:property <http://worldbank.270a.info/property/number-of-votes> ;
+        void:triples 357
+    ], [
+        void:distinctObjects 10 ;
+        void:distinctSubjects 30 ;
+        void:property <http://worldbank.270a.info/property/ida-statement-of-cash-flows-line-item> ;
+        void:triples 30
+    ], [
+        void:distinctObjects 24 ;
+        void:distinctSubjects 3306 ;
+        void:property <http://worldbank.270a.info/property/receipt-quarter> ;
+        void:triples 3306
+    ], [
+        void:distinctObjects 312 ;
+        void:distinctSubjects 15792 ;
+        void:property <http://worldbank.270a.info/property/donor-agency> ;
+        void:triples 15792
+    ], [
+        void:distinctObjects 47885 ;
+        void:distinctSubjects 96633 ;
+        void:property <http://worldbank.270a.info/property/due-to-ida> ;
+        void:triples 96633
+    ], [
+        void:distinctObjects 24 ;
+        void:distinctSubjects 8083 ;
+        void:property <http://worldbank.270a.info/property/transfer-quarter> ;
+        void:triples 8083
+    ], [
+        void:distinctObjects 15853 ;
+        void:distinctSubjects 24534 ;
+        void:property <http://worldbank.270a.info/property/amount-in-usd> ;
+        void:triples 24534
+    ], [
+        void:distinctObjects 127 ;
+        void:distinctSubjects 214995 ;
+        void:property <http://worldbank.270a.info/property/region> ;
+        void:triples 214995
+    ], [
+        void:distinctObjects 62 ;
+        void:distinctSubjects 186 ;
+        void:property <http://worldbank.270a.info/property/percentage-of-total-shares> ;
+        void:triples 186
+    ], [
+        void:distinctObjects 49 ;
+        void:distinctSubjects 59 ;
+        void:property <http://worldbank.270a.info/property/fy09-budget-plan> ;
+        void:triples 59
+    ], [
+        void:distinctObjects 6 ;
+        void:distinctSubjects 26857 ;
+        void:property <http://worldbank.270a.info/property/status> ;
+        void:triples 26857
+    ], [
+        void:distinctObjects 4190 ;
+        void:distinctSubjects 214845 ;
+        void:property <http://worldbank.270a.info/property/closed-date-most-recent> ;
+        void:triples 214845
+    ], [
+        void:distinctObjects 1446 ;
+        void:distinctSubjects 118362 ;
+        void:property <http://worldbank.270a.info/property/interest-rate> ;
+        void:triples 118362
+    ], [
+        void:distinctObjects 254 ;
+        void:distinctSubjects 214995 ;
+        void:property <http://worldbank.270a.info/property/end-of-period> ;
+        void:triples 214995
+    ], [
+        void:distinctObjects 39712 ;
+        void:distinctSubjects 214995 ;
+        void:property <http://worldbank.270a.info/property/disbursed-amount> ;
+        void:triples 214995
+    ], [
+        void:distinctObjects 95 ;
+        void:distinctSubjects 214995 ;
+        void:property <http://worldbank.270a.info/property/loan-status> ;
+        void:triples 214995
+    ], [
+        void:distinctObjects 8 ;
+        void:distinctSubjects 74 ;
+        void:property <http://worldbank.270a.info/property/notes> ;
+        void:triples 74
+    ], [
+        void:distinctObjects 48 ;
+        void:distinctSubjects 269502 ;
+        void:property qb:dataSet ;
+        void:triples 269502
+    ], [
+        void:distinctObjects 13 ;
+        void:distinctSubjects 14 ;
+        void:property <http://worldbank.270a.info/property/fy09-amount-us-millions> ;
+        void:triples 14
+    ], [
+        void:distinctObjects 13 ;
+        void:distinctSubjects 7359 ;
+        void:property <http://worldbank.270a.info/property/fiscal-year-of-agreement> ;
+        void:triples 7359
+    ], [
+        void:distinctObjects 7 ;
+        void:distinctSubjects 6747 ;
+        void:property <http://worldbank.270a.info/property/financial-intermediary-funds-funding-decisions-financial-product> ;
+        void:triples 6747
+    ], [
+        void:distinctObjects 32 ;
+        void:distinctSubjects 124 ;
+        void:property <http://worldbank.270a.info/property/ibrd-balance-sheet-line-item> ;
+        void:triples 124
+    ], [
+        void:distinctObjects 57 ;
+        void:distinctSubjects 59 ;
+        void:property <http://worldbank.270a.info/property/fy13-indicative-plan-fy12> ;
+        void:triples 59
+    ], [
+        void:distinctObjects 628 ;
+        void:distinctSubjects 35545 ;
+        void:property <http://worldbank.270a.info/property/fund-name> ;
+        void:triples 35545
+    ], [
+        void:distinctObjects 1719 ;
+        void:distinctSubjects 9357 ;
+        void:property <http://worldbank.270a.info/property/grant-agreement-date> ;
+        void:triples 9357
+    ], [
+        void:distinctObjects 1633 ;
+        void:distinctSubjects 214995 ;
+        void:property <http://worldbank.270a.info/property/sold-3rd-party> ;
+        void:triples 214995
+    ], [
+        void:distinctObjects 14 ;
+        void:distinctSubjects 14 ;
+        void:property <http://worldbank.270a.info/property/fy06-amount-us-millions> ;
+        void:triples 14
+    ], [
+        void:distinctObjects 6 ;
+        void:distinctSubjects 6 ;
+        void:property <http://worldbank.270a.info/property/usable-capital-and-reserves-us-millions> ;
+        void:triples 6
+    ], [
+        void:distinctObjects 6 ;
+        void:distinctSubjects 6 ;
+        void:property <http://worldbank.270a.info/property/undisbursed-loans-us-millions> ;
+        void:triples 6
+    ], [
+        void:distinctObjects 5 ;
+        void:distinctSubjects 6747 ;
+        void:property <http://worldbank.270a.info/property/use-code> ;
+        void:triples 6747
+    ], [
+        void:distinctObjects 2900 ;
+        void:distinctSubjects 9358 ;
+        void:property <http://worldbank.270a.info/property/grant-commitments-usd> ;
+        void:triples 9358
+    ], [
+        void:distinctObjects 294 ;
+        void:distinctSubjects 17519 ;
+        void:property <http://worldbank.270a.info/property/fund> ;
+        void:triples 17519
+    ], [
+        void:distinctObjects 163 ;
+        void:distinctSubjects 9358 ;
+        void:property <http://worldbank.270a.info/property/program-name> ;
+        void:triples 9358
+    ], [
+        void:distinctObjects 2 ;
+        void:distinctSubjects 3306 ;
+        void:property <http://worldbank.270a.info/property/receipt-type> ;
+        void:triples 3306
+    ], [
+        void:distinctObjects 97 ;
+        void:distinctSubjects 432 ;
+        void:property <http://worldbank.270a.info/property/vpu-code> ;
+        void:triples 432
+    ], [
+        void:distinctObjects 417 ;
+        void:distinctSubjects 16134 ;
+        void:property <http://worldbank.270a.info/property/principal-recipient> ;
+        void:triples 16134
+    ], [
+        void:distinctObjects 3459 ;
+        void:distinctSubjects 10160 ;
+        void:property <http://worldbank.270a.info/property/paid-in-contributions-to-ibrd-ida-ifc-trust-funds-based-on-fy-of-receipt-trustee-fund-name> ;
+        void:triples 10160
+    ], [
+        void:distinctObjects 12619 ;
+        void:distinctSubjects 118362 ;
+        void:property <http://worldbank.270a.info/property/due-to-ibrd> ;
+        void:triples 118362
+    ], [
+        void:distinctObjects 2 ;
+        void:distinctSubjects 452 ;
+        void:property <http://worldbank.270a.info/property/admin-budget-type> ;
+        void:triples 452
+    ], [
+        void:distinctObjects 5653 ;
+        void:distinctSubjects 7359 ;
+        void:property <http://worldbank.270a.info/property/total-contribution-usd> ;
+        void:triples 7359
+    ], [
+        void:distinctObjects 13523 ;
+        void:distinctSubjects 135341 ;
+        void:property <http://worldbank.270a.info/property/last-disbursement-date> ;
+        void:triples 135341
+    ], [
+        void:distinctObjects 6544 ;
+        void:distinctSubjects 9370 ;
+        void:property <http://worldbank.270a.info/property/disbursements-us-billions> ;
+        void:triples 9370
+    ], [
+        void:distinctObjects 12 ;
+        void:distinctSubjects 12 ;
+        void:property <http://worldbank.270a.info/property/net-disbursements-us-millions> ;
+        void:triples 12
+    ], [
+        void:distinctObjects 26 ;
+        void:distinctSubjects 94 ;
+        void:property <http://worldbank.270a.info/property/ida-balance-sheet-line-item> ;
+        void:triples 94
+    ], [
+        void:distinctObjects 24538 ;
+        void:distinctSubjects 214995 ;
+        void:property <http://worldbank.270a.info/property/undisbursed-amount> ;
+        void:triples 214995
+    ], [
+        void:distinctObjects 6 ;
+        void:distinctSubjects 6 ;
+        void:property <http://worldbank.270a.info/property/undisbursed-credits-us-millions> ;
+        void:triples 6
+    ], [
+        void:distinctObjects 34 ;
+        void:distinctSubjects 96633 ;
+        void:property <http://worldbank.270a.info/property/service-charge-rate> ;
+        void:triples 96633
+    ], [
+        void:distinctObjects 532 ;
+        void:distinctSubjects 600 ;
+        void:property <http://worldbank.270a.info/property/amount-us-millions> ;
+        void:triples 600
+    ], [
+        void:distinctObjects 29134 ;
+        void:distinctSubjects 214995 ;
+        void:property <http://worldbank.270a.info/property/loan-number> ;
+        void:triples 214995
+    ], [
+        void:distinctObjects 9841 ;
+        void:distinctSubjects 17519 ;
+        void:property <http://worldbank.270a.info/property/contributions-paid-in-usd> ;
+        void:triples 17519
+    ], [
+        void:distinctObjects 357 ;
+        void:distinctSubjects 357 ;
+        void:property <http://worldbank.270a.info/property/member> ;
+        void:triples 357
+    ], [
+        void:distinctObjects 9 ;
+        void:distinctSubjects 36 ;
+        void:property <http://worldbank.270a.info/property/counterparty-rating> ;
+        void:triples 36
+    ], [
+        void:distinctObjects 15436 ;
+        void:distinctSubjects 214995 ;
+        void:property <http://worldbank.270a.info/property/original-principal-amount> ;
+        void:triples 214995
+    ], [
+        void:distinctObjects 1698 ;
+        void:distinctSubjects 224353 ;
+        void:property <http://worldbank.270a.info/property/country> ;
+        void:triples 241072
+    ], [
+        void:distinctObjects 15740 ;
+        void:distinctSubjects 212064 ;
+        void:property <http://worldbank.270a.info/property/agreement-signing-date> ;
+        void:triples 212064
+    ], [
+        void:distinctObjects 3942 ;
+        void:distinctSubjects 9358 ;
+        void:property <http://worldbank.270a.info/property/grant-fund-number> ;
+        void:triples 9358
+    ], [
+        void:distinctObjects 22 ;
+        void:distinctSubjects 269502 ;
+        void:property rdf:type ;
+        void:triples 129137
+    ], [
+        void:distinctObjects 690 ;
+        void:distinctSubjects 7359 ;
+        void:property <http://worldbank.270a.info/property/contributions-outstanding-usd> ;
+        void:triples 7359
+    ], [
+        void:distinctObjects 609 ;
+        void:distinctSubjects 9358 ;
+        void:property <http://worldbank.270a.info/property/recipient-executed-grants-commitments-and-disbursements-trustee-fund> ;
+        void:triples 9358
+    ], [
+        void:distinctObjects 50977 ;
+        void:distinctSubjects 96633 ;
+        void:property <http://worldbank.270a.info/property/credits-held> ;
+        void:triples 96633
+    ], [
+        void:distinctObjects 17021 ;
+        void:distinctSubjects 214995 ;
+        void:property <http://worldbank.270a.info/property/cancelled-amount> ;
+        void:triples 214995
+    ], [
+        void:distinctObjects 63377 ;
+        void:distinctSubjects 214995 ;
+        void:property <http://worldbank.270a.info/property/borrower-s-obligation> ;
+        void:triples 214995
+    ], [
+        void:distinctObjects 26 ;
+        void:distinctSubjects 530 ;
+        void:property <http://worldbank.270a.info/property/vpu-group-code> ;
+        void:triples 530
+    ], [
+        void:distinctObjects 97 ;
+        void:distinctSubjects 432 ;
+        void:property <http://worldbank.270a.info/property/vpu> ;
+        void:triples 432
+    ], [
+        void:distinctObjects 139 ;
+        void:distinctSubjects 187 ;
+        void:property <http://worldbank.270a.info/property/amounts-paid-in> ;
+        void:triples 187
+    ], [
+        void:distinctObjects 4 ;
+        void:distinctSubjects 53064 ;
+        void:property <http://worldbank.270a.info/property/as-of-date> ;
+        void:triples 53064
+    ], [
+        void:distinctObjects 24 ;
+        void:distinctSubjects 78 ;
+        void:property <http://worldbank.270a.info/property/ibrd-statement-of-income-line-item> ;
+        void:triples 78
+    ], [
+        void:distinctObjects 25 ;
+        void:distinctSubjects 26187 ;
+        void:property <http://worldbank.270a.info/property/calendar-year> ;
+        void:triples 26187
+    ], [
+        void:distinctObjects 3 ;
+        void:distinctSubjects 3306 ;
+        void:property <http://worldbank.270a.info/property/contribution-type> ;
+        void:triples 3306
+    ], [
+        void:distinctObjects 34 ;
+        void:distinctSubjects 78 ;
+        void:property <http://worldbank.270a.info/property/betf-us-millions> ;
+        void:triples 78
+    ], [
+        void:distinctObjects 26 ;
+        void:distinctSubjects 78 ;
+        void:property <http://worldbank.270a.info/property/ibrd-statement-of-cash-flows-line-item> ;
+        void:triples 78
+    ], [
+        void:distinctObjects 28 ;
+        void:distinctSubjects 214995 ;
+        void:property <http://worldbank.270a.info/property/due-3rd-party> ;
+        void:triples 214995
+    ], [
+        void:distinctObjects 27 ;
+        void:distinctSubjects 10400 ;
+        void:property <http://worldbank.270a.info/property/fiscal-year> ;
+        void:triples 10400
+    ], [
+        void:distinctObjects 6 ;
+        void:distinctSubjects 6 ;
+        void:property <http://worldbank.270a.info/property/loans-outstanding-us-millions> ;
+        void:triples 6
+    ], [
+        void:distinctObjects 6 ;
+        void:distinctSubjects 6 ;
+        void:property <http://worldbank.270a.info/property/equity-to-loans-ratio> ;
+        void:triples 6
+    ], [
+        void:distinctObjects 8 ;
+        void:distinctSubjects 26187 ;
+        void:property <http://worldbank.270a.info/property/sector-theme> ;
+        void:triples 26187
+    ], [
+        void:distinctObjects 2 ;
+        void:distinctSubjects 12 ;
+        void:property <http://worldbank.270a.info/property/fund-type> ;
+        void:triples 12
+    ], [
+        void:distinctObjects 14 ;
+        void:distinctSubjects 10160 ;
+        void:property <http://worldbank.270a.info/property/fiscal-year-of-receipt> ;
+        void:triples 10160
+    ], [
+        void:distinctObjects 6 ;
+        void:distinctSubjects 6 ;
+        void:property <http://worldbank.270a.info/property/operating-income-us-millions> ;
+        void:triples 6
+    ], [
+        void:distinctObjects 3491 ;
+        void:distinctSubjects 7359 ;
+        void:property <http://worldbank.270a.info/property/total-contributions-to-ibrd-ida-ifc-trust-funds-summary-based-on-fy-of-agreement-trustee-fund-name> ;
+        void:triples 7359
+    ], [
+        void:distinctObjects 24 ;
+        void:distinctSubjects 5645 ;
+        void:property <http://worldbank.270a.info/property/sub-account> ;
+        void:triples 5645
+    ], [
+        void:distinctObjects 2 ;
+        void:distinctSubjects 170 ;
+        void:property <http://worldbank.270a.info/property/membership> ;
+        void:triples 170
+    ], [
+        void:distinctObjects 12 ;
+        void:distinctSubjects 108 ;
+        void:property <http://worldbank.270a.info/property/source> ;
+        void:triples 108
+    ], [
+        void:distinctObjects 12 ;
+        void:distinctSubjects 12 ;
+        void:property <http://worldbank.270a.info/property/gross-disbursements-development-policy-lending-us-millions> ;
+        void:triples 12
+    ], [
+        void:distinctObjects 145 ;
+        void:distinctSubjects 170 ;
+        void:property <http://worldbank.270a.info/property/subscriptions-and-contributions-committed-us-millions> ;
+        void:triples 170
+    ], [
+        void:distinctObjects 50 ;
+        void:distinctSubjects 78 ;
+        void:property <http://worldbank.270a.info/property/reimbursable-us-millions> ;
+        void:triples 78
+    ] ;
+    void:triples 7923791 ;
+    void:vocabulary
+        <http://purl.org/dc/terms/> ,
+        <http://worldbank.270a.info/property/> ,
+        <http://www.w3.org/1999/02/22-rdf-syntax-ns> ,
+        <http://purl.org/linked-data/cube> ,
+        <http://reference.data.gov.uk/id/year/> ,
+        <http://purl.org/linked-data/sdmx> ,
+        <http://purl.org/linked-data/sdmx/2009/dimension> ;
+    .
+
+worldbank-dataset:world-bank-projects-and-operations
+    a sd:Graph, void:Dataset ;
+    dcterms:title "World Development Projects and Operations"@en ;
+    dcterms:description "World Bank Projects and Operations data from The World Bank."@en ;
+    dcterms:source [ foaf:homepage <http://www.worldbank.org/projects> ] ;
+    dcterms:publisher [ foaf:homepage <http://csarven.ca/> ] ;
+    dcterms:created "2012-02-29"^^xsd:date ;
+    dcterms:modified "2012-08-10"^^xsd:date ;
+    dcterms:subject
+        <http://purl.org/linked-data/sdmx/2009/subject#2.4.6>,
+        <http://purl.org/linked-data/sdmx/2009/subject#2.5>,
+        <http://purl.org/linked-data/sdmx/2009/subject#2.6>,
+        <http://purl.org/linked-data/sdmx/2009/subject#2.7> ;
+    void:dataDump <http://worldbank.270a.info/data/world-bank-projects-and-operations.tar.gz> ;
+    void:uriRegexPattern "^http://worldbank\\.270a\\.info/dataset/world-bank-projects-and-operations/(.+)$";
+    void:exampleResource <http://worldbank.270a.info/classification/project/P115592> ;
+    void:classPartition [
+        void:class <http://purl.org/linked-data/sdmx#CodeList> ;
+        void:entities 1
+    ], [
+        void:class <http://dbpedia.org/ontology/Project> ;
+        void:entities 14580
+    ], [
+        void:class <http://www.w3.org/2004/02/skos/core#Concept> ;
+        void:entities 14580
+    ] ;
+    void:classes 3 ;
+    void:entities 97809 ;
+    void:properties 37 ;
+    void:propertyPartition [
+        void:distinctObjects 652 ;
+        void:distinctSubjects 14580 ;
+        void:property <http://worldbank.270a.info/property/grant-amount-us-millions> ;
+        void:triples 14580
+    ], [
+        void:distinctObjects 7645 ;
+        void:distinctSubjects 5427 ;
+        void:property <http://worldbank.270a.info/property/loan-number> ;
+        void:triples 7645
+    ], [
+        void:distinctObjects 4147 ;
+        void:distinctSubjects 13507 ;
+        void:property <http://worldbank.270a.info/property/board-approval-date> ;
+        void:triples 13507
+    ], [
+        void:distinctObjects 4 ;
+        void:distinctSubjects 14576 ;
+        void:property <http://worldbank.270a.info/property/supplement-project-flag> ;
+        void:triples 14576
+    ], [
+        void:distinctObjects 12432 ;
+        void:distinctSubjects 14581 ;
+        void:property <http://www.w3.org/2004/02/skos/core#prefLabel> ;
+        void:triples 15030
+    ], [
+        void:distinctObjects 20 ;
+        void:distinctSubjects 14580 ;
+        void:property <http://worldbank.270a.info/property/product-line> ;
+        void:triples 14580
+    ], [
+        void:distinctObjects 348 ;
+        void:distinctSubjects 14580 ;
+        void:property <http://worldbank.270a.info/property/country> ;
+        void:triples 14580
+    ], [
+        void:distinctObjects 1257 ;
+        void:distinctSubjects 14580 ;
+        void:property <http://worldbank.270a.info/property/ibrd-commitment-amount> ;
+        void:triples 14580
+    ], [
+        void:distinctObjects 8822 ;
+        void:distinctSubjects 75615 ;
+        void:property <http://purl.org/dc/terms/date> ;
+        void:triples 75615
+    ], [
+        void:distinctObjects 1165 ;
+        void:distinctSubjects 14580 ;
+        void:property <http://worldbank.270a.info/property/ida-commitment-amount> ;
+        void:triples 14580
+    ], [
+        void:distinctObjects 14580 ;
+        void:distinctSubjects 14580 ;
+        void:property <http://www.w3.org/2004/02/skos/core#notation> ;
+        void:triples 14580
+    ], [
+        void:distinctObjects 5 ;
+        void:distinctSubjects 14581 ;
+        void:property rdf:type ;
+        void:triples 15480
+    ], [
+        void:distinctObjects 1795 ;
+        void:distinctSubjects 83228 ;
+        void:property <http://purl.org/dc/terms/title> ;
+        void:triples 83228
+    ], [
+        void:distinctObjects 2 ;
+        void:distinctSubjects 14580 ;
+        void:property <http://worldbank.270a.info/property/product-line-type> ;
+        void:triples 14580
+    ], [
+        void:distinctObjects 1965 ;
+        void:distinctSubjects 9493 ;
+        void:property <http://worldbank.270a.info/property/total-commitment-amount> ;
+        void:triples 9493
+    ], [
+        void:distinctObjects 6 ;
+        void:distinctSubjects 14346 ;
+        void:property <http://worldbank.270a.info/property/lending-instrument-type> ;
+        void:triples 14346
+    ], [
+        void:distinctObjects 14 ;
+        void:distinctSubjects 14580 ;
+        void:property <http://worldbank.270a.info/property/region> ;
+        void:triples 14580
+    ], [
+        void:distinctObjects 2 ;
+        void:distinctSubjects 14580 ;
+        void:property <http://www.w3.org/2004/02/skos/core#inScheme> ;
+        void:triples 14580
+    ], [
+        void:distinctObjects 11 ;
+        void:distinctSubjects 9563 ;
+        void:property <http://worldbank.270a.info/property/environmental-assessment-category-code> ;
+        void:triples 9563
+    ], [
+        void:distinctObjects 3784 ;
+        void:distinctSubjects 14564 ;
+        void:property <http://worldbank.270a.info/property/lend-project-cost> ;
+        void:triples 14564
+    ], [
+        void:distinctObjects 32 ;
+        void:distinctSubjects 14573 ;
+        void:property <http://worldbank.270a.info/property/major-sector> ;
+        void:triples 26302
+    ], [
+        void:distinctObjects 2 ;
+        void:distinctSubjects 14580 ;
+        void:property <http://www.w3.org/2004/02/skos/core#topConceptOf> ;
+        void:triples 14580
+    ], [
+        void:distinctObjects 29 ;
+        void:distinctSubjects 14346 ;
+        void:property <http://worldbank.270a.info/property/lending-instrument> ;
+        void:triples 14346
+    ], [
+        void:distinctObjects 6154 ;
+        void:distinctSubjects 9720 ;
+        void:property <http://worldbank.270a.info/property/implementing-agency> ;
+        void:triples 9720
+    ], [
+        void:distinctObjects 1 ;
+        void:distinctSubjects 1 ;
+        void:property <http://www.w3.org/2004/02/skos/core#definition> ;
+        void:triples 1
+    ], [
+        void:distinctObjects 2927 ;
+        void:distinctSubjects 9831 ;
+        void:property <http://worldbank.270a.info/property/borrower> ;
+        void:triples 9831
+    ], [
+        void:distinctObjects 6 ;
+        void:distinctSubjects 9493 ;
+        void:property <http://worldbank.270a.info/property/goal> ;
+        void:triples 19026
+    ], [
+        void:distinctObjects 6 ;
+        void:distinctSubjects 14580 ;
+        void:property <http://worldbank.270a.info/property/status> ;
+        void:triples 14580
+    ], [
+        void:distinctObjects 100472 ;
+        void:distinctSubjects 97808 ;
+        void:property <http://xmlns.com/foaf/0.1/page> ;
+        void:triples 107301
+    ], [
+        void:distinctObjects 1210 ;
+        void:distinctSubjects 12221 ;
+        void:property <http://worldbank.270a.info/property/closing-date> ;
+        void:triples 12221
+    ], [
+        void:distinctObjects 14580 ;
+        void:distinctSubjects 2 ;
+        void:property <http://www.w3.org/2004/02/skos/core#hasTopConcept> ;
+        void:triples 14580
+    ], [
+        void:distinctObjects 145 ;
+        void:distinctSubjects 9493 ;
+        void:property <http://worldbank.270a.info/property/theme> ;
+        void:triples 29049
+    ], [
+        void:distinctObjects 2 ;
+        void:distinctSubjects 14580 ;
+        void:property <http://worldbank.270a.info/property/index-type> ;
+        void:triples 14580
+    ], [
+        void:distinctObjects 1563 ;
+        void:distinctSubjects 9493 ;
+        void:property <http://worldbank.270a.info/property/total-amounts> ;
+        void:triples 9493
+    ], [
+        void:distinctObjects 236 ;
+        void:distinctSubjects 14573 ;
+        void:property <http://worldbank.270a.info/property/sector> ;
+        void:triples 31936
+    ], [
+        void:distinctObjects 83228 ;
+        void:distinctSubjects 13202 ;
+        void:property <http://purl.org/dc/terms/references> ;
+        void:triples 83228
+    ], [
+        void:distinctObjects 81459 ;
+        void:distinctSubjects 83228 ;
+        void:property <http://purl.org/dc/terms/identifier> ;
+        void:triples 83228
+    ] ;
+    void:triples 957005 ;
+    void:vocabulary
+        <http://purl.org/dc/terms/> ,
+        <http://worldbank.270a.info/property/> ,
+        <http://www.w3.org/1999/02/22-rdf-syntax-ns> ,
+        <http://purl.org/linked-data/sdmx> ,
+        <http://xmlns.com/foaf/> ;
+    .
+
+
+worldbank-dataset:world-bank-climates
+    a sd:Graph, void:Dataset ;
+    dcterms:title "World Bank Climate Change dataset"@en ;
+    void:triples 77885568 ;
+    dcterms:source [ foaf:homepage <http://climatechange.worldbank.org/> ] ;
+    dcterms:publisher [ foaf:homepage <http://csarven.ca/> ] ;
+    dcterms:created "2012-03-25"^^xsd:date ;
+    dcterms:modified "2012-04-02"^^xsd:date ;
+    void:dataDump <http://worldbank.270a.info/data/world-bank-climates.tar.gz> ;
+    void:uriRegexPattern "^http://worldbank\\.270a\\.info/dataset/world-bank-climates/(.+)$";
+    void:exampleResource
+        <http://worldbank.270a.info/dataset/world-bank-climates/month-average/2020-2039/06/CA/tas/ukmo-hadgem1/a2> ,
+        <http://worldbank.270a.info/dataset/world-bank-climates/year-average-ensemble/2020-2039/CA/tas/b1/90> ;
+    void:classPartition [
+        void:class qb:Observation ;
+        void:entities 8905737
+    ] ;
+    void:classes 1 ;
+    void:entities 8905737 ;
+    void:properties 12 ;
+    void:propertyPartition [
+        void:distinctObjects 257 ;
+        void:distinctSubjects 8905737 ;
+        void:property qb:dataSet ;
+        void:triples 8905737
+    ], [
+        void:distinctObjects 2422 ;
+        void:distinctSubjects 8136360 ;
+        void:property <http://worldbank.270a.info/property/recurring-interval> ;
+        void:triples 8136360
+    ], [
+        void:distinctObjects 1917 ;
+        void:distinctSubjects 4978283 ;
+        void:property <http://worldbank.270a.info/property/global-circulation-model> ;
+        void:triples 4978283
+    ], [
+        void:distinctObjects 445 ;
+        void:distinctSubjects 7527465 ;
+        void:property <http://worldbank.270a.info/property/scenario> ;
+        void:triples 7527465
+    ], [
+        void:distinctObjects 230 ;
+        void:distinctSubjects 8905737 ;
+        void:property rdf:type ;
+        void:triples 4339234
+    ], [
+        void:distinctObjects 1417 ;
+        void:distinctSubjects 8905737 ;
+        void:property <http://purl.org/linked-data/sdmx/2009/dimension#refPeriod> ;
+        void:triples 8905737
+    ], [
+        void:distinctObjects 8104 ;
+        void:distinctSubjects 8905737 ;
+        void:property <http://purl.org/linked-data/sdmx/2009/dimension#refArea> ;
+        void:triples 8905737
+    ], [
+        void:distinctObjects 9286 ;
+        void:distinctSubjects 9322 ;
+        void:property <http://worldbank.270a.info/property/decade-average> ;
+        void:triples 9322
+    ], [
+        void:distinctObjects 743144 ;
+        void:distinctSubjects 760055 ;
+        void:property <http://worldbank.270a.info/property/year-average> ;
+        void:triples 760055
+    ], [
+        void:distinctObjects 303 ;
+        void:distinctSubjects 3809038 ;
+        void:property <http://worldbank.270a.info/property/percentile> ;
+        void:triples 3809038
+    ], [
+        void:distinctObjects 7648445 ;
+        void:distinctSubjects 8136360 ;
+        void:property <http://worldbank.270a.info/property/month-average> ;
+        void:triples 8136360
+    ], [
+        void:distinctObjects 1239 ;
+        void:distinctSubjects 8905737 ;
+        void:property <http://worldbank.270a.info/property/variable> ;
+        void:triples 8905737
+    ] ;
+    void:vocabulary
+        <http://purl.org/linked-data/cube> ,
+        <http://purl.org/linked-data/sdmx/2009/dimension> ,
+        <http://worldbank.270a.info/property/> ,
+        <http://www.w3.org/1999/02/22-rdf-syntax-ns> ;
+    .
+
+
+:linkset-worldbank-transparency
+    a void:Linkset ;
+    void:linkPredicate skos:exactMatch ;
+    void:subjectsTarget worldbank-dataset:worldbank ;
+    void:objectsTarget transparency-dataset:transparency ;
+    void:triples 182 ;
+    .
+
+:linkset-worldbank-dbpedia
+    a void:Linkset ;
+    void:linkPredicate owl:sameAs ;
+    void:subjectsTarget worldbank-dataset:worldbank ;
+    void:objectsTarget <http://dbpedia.org/void/Dataset> ;
+    void:triples 380 ;
+    .
+
+:linkset-worldbank-eurostat
+    a void:Linkset ;
+    void:linkPredicate owl:sameAs ;
+    void:subjectsTarget worldbank-dataset:worldbank ;
+    void:objectsTarget :eurostat ;
+    void:triples 216 ;
+    .
+
+:linkset-worldbank-geonames
+    a void:Linkset ;
+    void:linkPredicate owl:sameAs ;
+    void:subjectsTarget worldbank-dataset:worldbank ;
+    void:objectsTarget :geonames ;
+    void:triples 216 ;
+    .
+
+:linkset-worldbank-bfs
+    a void:Linkset ;
+    void:linkPredicate skos:exactMatch ;
+    void:subjectsTarget worldbank-dataset:worldbank ;
+    void:objectsTarget bfs-dataset:bfs ;
+    void:triples 185 ;
+    .
+
+:linkset-worldbank-ecb
+    a void:Linkset ;
+    void:linkPredicate skos:exactMatch ;
+    void:subjectsTarget worldbank-dataset:worldbank ;
+    void:objectsTarget ecb-dataset:ecb ;
+    void:triples 188 ;
+    .
+
+:linkset-worldbank-imf
+    a void:Linkset ;
+    void:linkPredicate skos:exactMatch ;
+    void:subjectsTarget worldbank-dataset:worldbank ;
+    void:objectsTarget imf-dataset:imf ;
+    void:triples 26 ;
+    .
+
+:linkset-worldbank-fao
+    a void:Linkset ;
+    void:linkPredicate skos:exactMatch ;
+    void:subjectsTarget worldbank-dataset:worldbank ;
+    void:objectsTarget fao-dataset:fao ;
+    void:triples 178 ;
+    .
+
+transparency-dataset:transparency
+    rdf:type void:Dataset ;
+    void:sparqlEndpoint <http://transparency.270a.info/sparql> ;
+    foaf:homepage <http://transparency.270a.info/> ;
+    .
+
+bfs-dataset:bfs
+    rdf:type void:Dataset ;
+    void:sparqlEndpoint <http://bfs.270a.info/sparql> ;
+    foaf:homepage <http://bfs.270a.info/> ;
+    .
+
+ecb-dataset:ecb
+    rdf:type void:Dataset ;
+    void:sparqlEndpoint <http://ecb.270a.info/sparql> ;
+    foaf:homepage <http://ecb.270a.info/> ;
+    .
+
+imf-dataset:imf
+    rdf:type void:Dataset ;
+    void:sparqlEndpoint <http://imf.270a.info/sparql> ;
+    foaf:homepage <http://imf.270a.info/> ;
+    .
+
+fao-dataset:fao
+    rdf:type void:Dataset ;
+    void:sparqlEndpoint <http://fao.270a.info/sparql> ;
+    foaf:homepage <http://fao.270a.info/> ;
+    .
+
+
+<http://dbpedia.org/void/Dataset>
+    rdf:type void:Dataset ;
+    void:sparqlEndpoint <http://dbpedia.org/sparql> ;
+    foaf:homepage <http://dbpedia.org/> ;
+    .
+
+:eurostat
+    rdf:type void:Dataset ;
+    void:sparqlEndpoint <http://eurostat.linked-statistics.org/sparql> ;
+    foaf:homepage <http://eurostat.linked-statistics.org/> ;
+    .
+
+:geonames
+    rdf:type void:Dataset ;
+    foaf:homepage <http://geonames.org/> ;
+    .
+
+:service
+    a sd:Service ;
+    sd:endpoint <http://worldbank.270a.info/sparql> ;
+    sd:supportedLanguage sd:SPARQL11Query ;
+    sd:feature sd:UnionDefaultGraph ;
+    sd:defaultDatasetDescription [
+        a sd:Dataset;
+        dcterms:title "World Bank Linked Data"@en ;
+        dcterms:description "World Bank Linked Data"@en ;
+        void:triples 173639128 ;
+
+        sd:defaultGraph [
+            a sd:Graph, void:Dataset ;
+            dcterms:title "World Bank Linked Data SPARQL Endpoint Description"@en ;
+            dcterms:description "Contains a copy of this SD+VoID file!"@en ;
+            void:triples 173639128 ;
+        ] ;
+        sd:namedGraph [
+            sd:name worldbank-graph:void ;
+            sd:graph worldbank-dataset:void ;
+        ] ;
+        sd:namedGraph [
+            sd:name worldbank-graph:meta ;
+            sd:graph worldbank-dataset:meta ;
+        ] ;
+        sd:namedGraph [
+            sd:name worldbank-graph:world-bank-indicators ;
+            sd:graph worldbank-dataset:world-bank-indicators ;
+        ] ;
+        sd:namedGraph [
+            sd:name worldbank-graph:world-bank-finances ;
+            sd:graph worldbank-dataset:world-bank-finances ;
+        ] ;
+        sd:namedGraph [
+            sd:name worldbank-graph:world-bank-projects-and-operations ;
+            sd:graph worldbank-dataset:world-bank-projects-and-operations ;
+        ] ;
+        sd:namedGraph [
+            sd:name worldbank-graph:worldbank-climates ;
+            sd:graph worldbank-dataset:world-bank-climates ;
+        ] ;
+    ] ;
+    .
+@prefix : <http://telegraphis.net/data/void#> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix foaf: <http://xmlns.org/foaf/0.1/> .
+@prefix geographis: <http://telegraphis.net/ontology/geography/geography#> .
+@prefix money: <http://telegraphis.net/ontology/money/money#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix scovo: <http://purl.org/NET/scovo#> .
 @prefix void: <http://rdfs.org/ns/void#> .
-@prefix : <http://ex.com/> .
+@prefix xml: <http://www.w3.org/XML/1998/namespace> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 
-:DBpedia rdf:type void:Dataset ;
-         dcterms:title "DBPedia" ;
-         foaf:homepage <http://dbpedia.org/> .
+:Countries2Factbook a void:Linkset ;
+    void:linkPredicate owl:sameAs ;
+    void:target :Countries,
+        :Factbook .
 
-:Bio2RDF rdf:type void:Dataset ;
-         dcterms:title "Bio2RDF" ;
-         foaf:homepage <http://bio2rdf.org/> .
+:Currencies2DBPedia a void:Linkset ;
+    void:linkPredicate owl:sameAs ;
+    void:target :Currencies,
+        :DBpedia .
 
-:DBLP rdf:type void:Dataset ;
-      dcterms:title "DBLP" ;
-      foaf:homepage <http://www4.wiwiss.fu-berlin.de/dblp/all> ;
-      dcterms:subject <http://dbpedia.org/resource/Computer_science> ;
-      dcterms:subject <http://dbpedia.org/resource/Journal> ;
-      dcterms:subject <http://dbpedia.org/resource/Proceedings> .
+:N3 a void:TechnicalFeature ;
+    rdfs:label "N3" ;
+    dcterms:format "text/n3" ;
+    rdfs:comment "Available as linked data in N3 format"@en .
 
-:DBpedia2DBLP rdf:type void:Linkset ;
-              void:target :DBpedia ;
-              void:target :DBLP .
+:Capitals2Countries a void:Linkset ;
+    void:linkPredicate geographis:capitalOf ;
+    void:objectsTarget :Countries ;
+    void:subjectsTarget :Capitals .
 
-:DBpedia2Bio2RDF rdf:type void:Linkset ;
-              void:target :DBpedia ;
-              void:target :Bio2RDF .
+:Capitals2DBpedia a void:Linkset ;
+    void:linkPredicate owl:sameAs ;
+    void:target :Capitals,
+        :DBpedia .
+
+:Capitals2Geonames a void:Linkset ;
+    void:linkPredicate owl:sameAs ;
+    void:target :Capitals,
+        :Geonames .
+
+:Continents2DBpedia a void:Linkset ;
+    void:linkPredicate owl:sameAs ;
+    void:target :Continents,
+        :DBpedia .
+
+:Continents2Geonames a void:Linkset ;
+    void:linkPredicate owl:sameAs ;
+    void:target :Continents,
+        :Geonames .
+
+:Countries2Capitals a void:Linkset ;
+    void:linkPredicate geographis:capital ;
+    void:objectsTarget :Capitals ;
+    void:subjectsTarget :Countries .
+
+:Countries2Continents a void:Linkset ;
+    void:linkPredicate geographis:inContinent ;
+    void:objectsTarget :Continents ;
+    void:subjectsTarget :Countries .
+
+:Countries2Currencies a void:Linkset ;
+    void:linkPredicate geographis:currency ;
+    void:objectsTarget :Currencies ;
+    void:subjectsTarget :Countries .
+
+:Countries2DBpedia a void:Linkset ;
+    void:linkPredicate owl:sameAs ;
+    void:target :Countries,
+        :DBpedia .
+
+:Countries2Geonames a void:Linkset ;
+    void:linkPredicate owl:sameAs ;
+    void:target :Countries,
+        :Geonames .
+
+:Countries2GeonamesCountries a void:Linkset ;
+    void:linkPredicate owl:sameAs ;
+    void:target :Countries,
+        :GeonamesCountries .
+
+:Currencies2Countries a void:Linkset ;
+    void:linkPredicate money:currencyOf ;
+    void:objectsTarget :Countries ;
+    void:subjectsTarget :Currencies .
+
+:Factbook a void:Dataset ;
+    dcterms:subject <http://dbpedia.org/resource/Country> ;
+    dcterms:title "World Factbook" ;
+    foaf:homepage <http://www4.wiwiss.fu-berlin.de/factbook/> .
+
+:GeonamesCountries a void:Dataset ;
+    dcterms:subject <http://dbpedia.org/resource/Country> ;
+    dcterms:title "Geonames Countries" ;
+    foaf:homepage <http://www.geonames.org/countries/> .
+
+:Continents a void:Dataset ;
+    dcterms:created "2009-06-02"^^xsd:date ;
+    dcterms:creator <http://www.pipian.com/people/pipian/card#me> ;
+    dcterms:description "Continents by abbreviation."@en ;
+    dcterms:issued "2009-06-02"^^xsd:date ;
+    dcterms:license <http://creativecommons.org/licenses/by/3.0/> ;
+    dcterms:publisher <http://www.pipian.com/people/pipian/card#me> ;
+    dcterms:source <http://www.geonames.org/> ;
+    dcterms:subject <http://dbpedia.org/resource/Continent> ;
+    dcterms:title "Telegraphis - Linked Data (Continents)" ;
+    void:dataDump <http://telegraphis.net/data/continents/continents.rdf>,
+        <http://telegraphis.net/data/continents/continents.ttl> ;
+    void:exampleResource <http://telegraphis.net/data/continents/EU#EU>,
+        <http://telegraphis.net/data/continents/NA#NA>,
+        <http://telegraphis.net/data/continents/OC#OC> ;
+    void:feature :RDFXML,
+        :Turtle ;
+    void:sparqlEndpoint <http://telegraphis.net/data/continents/sparql> ;
+    void:statItem [ scovo:dimension void:numberOfTriples ;
+            rdf:value 126 ],
+        [ scovo:dimension void:numberOfResources ;
+            rdf:value 7 ] ;
+    void:subset :Continents2DBpedia,
+        :Continents2Geonames ;
+    void:uriRegexPattern "http://telegraphis.net/data/continents/[A-Z]{2}#[A-Z]{2}" ;
+    void:vocabulary <http://geonames.org/ontology#>,
+        geographis:,
+        <http://telegraphis.net/ontology/measurement/code#>,
+        <http://telegraphis.net/ontology/measurement/measurement#>,
+        <http://telegraphis.net/ontology/measurement/metric#>,
+        <http://telegraphis.net/ontology/measurement/quantity#> ;
+    foaf:homepage <http://telegraphis.net/data/continents/> .
+
+:Currencies a void:Dataset ;
+    dcterms:created "2009-06-04"^^xsd:date ;
+    dcterms:creator <http://www.pipian.com/people/pipian/card#me> ;
+    dcterms:description "Currencies by ISO-4217 code, with data scraped from Wikipedia."@en ;
+    dcterms:issued "2009-06-04"^^xsd:date ;
+    dcterms:license <http://creativecommons.org/licenses/by/3.0/> ;
+    dcterms:publisher <http://www.pipian.com/people/pipian/card#me> ;
+    dcterms:source <http://en.wikipedia.org/> ;
+    dcterms:subject <http://dbpedia.org/resource/Currency> ;
+    dcterms:title "Telegraphis - Linked Data (Currencies)" ;
+    void:dataDump <http://telegraphis.net/data/currencies/currencies.rdf>,
+        <http://telegraphis.net/data/currencies/currencies.ttl> ;
+    void:exampleResource <http://telegraphis.net/data/continents/JPY#JPY>,
+        <http://telegraphis.net/data/continents/USD#USD>,
+        <http://telegraphis.net/data/currencies/GBP#GBP> ;
+    void:feature :RDFXML,
+        :Turtle ;
+    void:sparqlEndpoint <http://telegraphis.net/data/currencies/sparql> ;
+    void:statItem [ scovo:dimension void:numberOfTriples ;
+            rdf:value 2598 ],
+        [ scovo:dimension void:numberOfResources ;
+            rdf:value 179 ] ;
+    void:subset :Currencies2Countries,
+        :Currencies2DBpedia ;
+    void:uriRegexPattern "http://telegraphis.net/data/currencies/[A-Z]{3}#[A-Z]{3}" ;
+    void:vocabulary <http://telegraphis.net/ontology/measurement/code#>,
+        money: ;
+    foaf:homepage <http://telegraphis.net/data/currencies/> .
+
+:Geonames a void:Dataset ;
+    dcterms:subject <http://dbpedia.org/resource/Location> ;
+    dcterms:title "Geonames" ;
+    foaf:homepage <http://sws.geonames.org/> .
+
+:Capitals a void:Dataset ;
+    dcterms:created "2009-06-02"^^xsd:date ;
+    dcterms:creator <http://www.pipian.com/people/pipian/card#me> ;
+    dcterms:description "Capitals of countries, with data scraped from Geonames."@en ;
+    dcterms:issued "2009-06-02"^^xsd:date ;
+    dcterms:license <http://creativecommons.org/licenses/by/3.0/> ;
+    dcterms:publisher <http://www.pipian.com/people/pipian/card#me> ;
+    dcterms:source <http://www.geonames.org/> ;
+    dcterms:subject <http://dbpedia.org/resource/Capital> ;
+    dcterms:title "Telegraphis - Linked Data (Capitals)" ;
+    void:dataDump <http://telegraphis.net/data/capitals/capitals.rdf>,
+        <http://telegraphis.net/data/capitals/capitals.ttl> ;
+    void:exampleResource <http://telegraphis.net/data/capitals/GB/London#London>,
+        <http://telegraphis.net/data/capitals/JP/Tokyo#Tokyo>,
+        <http://telegraphis.net/data/capitals/US/Washington#Washington> ;
+    void:feature :RDFXML,
+        :Turtle ;
+    void:sparqlEndpoint <http://telegraphis.net/data/capitals/sparql> ;
+    void:statItem [ scovo:dimension void:numberOfTriples ;
+            rdf:value 2584 ],
+        [ scovo:dimension void:numberOfResources ;
+            rdf:value 241 ] ;
+    void:subset :Capitals2Countries,
+        :Capitals2DBpedia,
+        :Capitals2Geonames ;
+    void:vocabulary <http://geonames.org/ontology#>,
+        geographis:,
+        <http://telegraphis.net/ontology/measurement/code#> ;
+    foaf:homepage <http://telegraphis.net/data/capitals/> .
+
+:DBpedia a void:Dataset ;
+    dcterms:subject <http://dbpedia.org/resource/DBpedia> ;
+    dcterms:title "DBpedia" ;
+    foaf:homepage <http://dbpedia.org/> .
+
+:RDFXML a void:TechnicalFeature ;
+    rdfs:label "RDF/XML" ;
+    dcterms:format "application/rdf+xml" ;
+    rdfs:comment "Available as linked data in RDF/XML format (via content-negotiation)"@en .
+
+:Turtle a void:TechnicalFeature ;
+    rdfs:label "Turtle" ;
+    dcterms:format "text/turtle" ;
+    rdfs:comment "Available as linked data in Turtle format"@en .
+
+:Countries a void:Dataset ;
+    dcterms:created "2009-06-02"^^xsd:date ;
+    dcterms:creator <http://www.pipian.com/people/pipian/card#me> ;
+    dcterms:description "Countries by ISO-3166-1 code, with data scraped from ISO and Geonames."@en ;
+    dcterms:issued "2009-06-02"^^xsd:date ;
+    dcterms:license <http://creativecommons.org/licenses/by/3.0/> ;
+    dcterms:publisher <http://www.pipian.com/people/pipian/card#me> ;
+    dcterms:source <http://www.geonames.org/> ;
+    dcterms:subject <http://dbpedia.org/resource/Country> ;
+    dcterms:title "Telegraphis - Linked Data (Countries)" ;
+    void:dataDump <http://telegraphis.net/data/countries/countries.rdf>,
+        <http://telegraphis.net/data/countries/countries.ttl> ;
+    void:exampleResource <http://telegraphis.net/data/countries/GB#GB>,
+        <http://telegraphis.net/data/countries/JP#JP>,
+        <http://telegraphis.net/data/countries/US#US> ;
+    void:feature :RDFXML,
+        :Turtle ;
+    void:sparqlEndpoint <http://telegraphis.net/data/countries/sparql> ;
+    void:statItem [ scovo:dimension void:numberOfTriples ;
+            rdf:value 8592 ],
+        [ scovo:dimension void:numberOfResources ;
+            rdf:value 246 ] ;
+    void:subset :Countries2Capitals,
+        :Countries2Continents,
+        :Countries2Currencies,
+        :Countries2DBpedia,
+        :Countries2Geonames,
+        :Countries2GeonamesCountries ;
+    void:uriRegexPattern "http://telegraphis.net/data/countries/[A-Z]{2}#[A-Z]{2}" ;
+    void:vocabulary <http://geonames.org/ontology#>,
+        geographis:,
+        <http://telegraphis.net/ontology/measurement/code#>,
+        <http://telegraphis.net/ontology/measurement/measurement#>,
+        <http://telegraphis.net/ontology/measurement/metric#>,
+        <http://telegraphis.net/ontology/measurement/quantity#> ;
+    foaf:homepage <http://telegraphis.net/data/countries/> .
 </textarea>
 <br>
 <button class="parse">parse</button>
