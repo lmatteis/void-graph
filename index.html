@@ -210,7 +210,8 @@ function parseJsonLd(jsonldDoc) {
             }
             word_array.push({
                 text: title,
-                weight: Math.random()
+                weight: Math.random(),
+                uri: obj['@id']
             });
 
         }
@@ -219,9 +220,8 @@ function parseJsonLd(jsonldDoc) {
     $("#cont").jQCloud(word_array, {
 
         afterCloudRender: function() {
-            // adjust circles!
+            // adjust text!
             $('.inner').each(function() {
-                console.log(this);
                 var $this = $(this);
                 var $parent = $this.parent();
                 $this.css({
@@ -229,31 +229,28 @@ function parseJsonLd(jsonldDoc) {
                     left: ($parent.width() / 2) - ($this.width() / 2)
                 });
             });
+            // connect!
+            // do linkset
+            for(var i=0; i<graph.length; i++) {
+                var obj = graph[i];
+                var subject, object;
+                if($.inArray('http://rdfs.org/ns/void#Linkset', obj['@type']) > -1) {
+                    if(obj['http://rdfs.org/ns/void#target']) {
+                        subject = obj['http://rdfs.org/ns/void#target'][0]['@id'];
+                        object = obj['http://rdfs.org/ns/void#target'][1]['@id'];
+                    } else if(obj.objectsTarget) {
+                        subject = obj.subjectsTarget;
+                        object = obj.objectsTarget
+                    }
+                    var subjectCircle = $('[uri="'+subject+'"]');
+                    var objectCircle = $('[uri="'+object+'"]');
+
+                    connect(subjectCircle, objectCircle, '#0f0', 5);
+                }
+            }
         }
     });
 
-
-    return;
-
-
-    // do linkset
-    for(var i=0; i<graph.length; i++) {
-        var obj = graph[i];
-        var subject, object;
-        if($.inArray('http://rdfs.org/ns/void#Linkset', obj['@type']) > -1) {
-            if(obj['http://rdfs.org/ns/void#target']) {
-                subject = obj['http://rdfs.org/ns/void#target'][0]['@id'];
-                object = obj['http://rdfs.org/ns/void#target'][1]['@id'];
-            } else if(obj.objectsTarget) {
-                subject = obj.subjectsTarget;
-                object = obj.objectsTarget
-            }
-            var subjectCircle = $('[id="'+subject+'"]');
-            var objectCircle = $('[id="'+object+'"]');
-
-            connect(subjectCircle, objectCircle, '#0f0', 5);
-        }
-    }
 
 
 }

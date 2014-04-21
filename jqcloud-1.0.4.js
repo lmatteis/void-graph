@@ -125,6 +125,7 @@
         } else {
           inner_html = word.text;
         }
+        word_span.attr('uri', word.uri);
         word_span.append('<div class="inner">'+ inner_html + '</div>');
 
         // Bind handlers to words
