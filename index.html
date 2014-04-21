@@ -213,10 +213,8 @@ function parseJsonLd(jsonldDoc) {
 
             word.text = title;
             word.uri = obj['@id'];
-            console.log(obj);
             if(obj['http://rdfs.org/ns/void#triples']) {
                 word.weight = obj['http://rdfs.org/ns/void#triples'][0]['@value'];
-                console.log(word.weight);
             } else {
                 word.weight = Math.random();
             }
