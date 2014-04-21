@@ -1,18 +1,29 @@
 <html>
 <head>
+    <link rel="stylesheet" type="text/css" href="jqcloud.css" />
 <script src="jquery.min.js"></script>
 
 <script src="n3-browser.min.js"></script>
 <script src="jsonld.js"></script>
 
+<script type="text/javascript" src="jqcloud-1.0.4.js"></script>
+
 <style>
 body {
+height: 1000px;
     font-size: 14px;
     font-family: Tahoma;
 }
-.circle {
+#cont {
+    width: 800px;
+    height: 800px;
+}
+#cont span, .circle {
     z-index: 1;
-    position: absolute;
+    position: relative;
+    float: left;
+    display: table-cell;
+    margin: 20px;
     height: 100px;
     width: 100px;
     text-align: center;
@@ -20,14 +31,13 @@ body {
     border-radius: 50%;
     background: #fff;
     border: 1px solid #316CC3;
-    font-size: 14px;
     font-family: Tahoma;
 
 -webkit-box-shadow: 10px 10px 51px -29px rgba(0,0,0,0.75);
 -moz-box-shadow: 10px 10px 51px -29px rgba(0,0,0,0.75);
 box-shadow: 10px 10px 51px -29px rgba(0,0,0,0.75);
 }
-.circle .inner
+.inner
 {
     position: absolute;
 }
@@ -71,19 +81,20 @@ function createCircle(text, zoom) {
     var $circle = $('#tmpl .circle').clone();
     var $inner = $circle.find('.inner')
     $inner.text(text);
-    $inner.css({
-        top: $circle.height() / 2
-
-    });
     return $circle;
 }
 function getCenter($circle) {
     var pos = $circle.position();
 
+    // add the margin
+    var margin = parseInt($circle.css('margin'), 10);
+    var top = pos.top + margin;
+    var left = pos.left + margin;
+
     var width = $circle.width();
     var height = $circle.height();
 
-    return { top: (pos.top + (height / 2)), left: (pos.left + (width/2)) };
+    return { top: (top + (height / 2)), left: (left + (width/2)) };
 }
 function connect($c1, $c2, color, thickness) {
     var center1 = getCenter($c1);
@@ -110,9 +121,9 @@ function connect($c1, $c2, color, thickness) {
 
 
 var min_x = 0;
-var max_x = 500;
+var max_x = 1000;
 var min_y = 0;
-var max_y = 400;
+var max_y = 1000;
 var filled_areas = [];
 function check_overlap(area) {
     for (var i = 0; i < filled_areas.length; i++) {
@@ -146,7 +157,6 @@ function parseTextarea() {
             convertToJsonLD(ntriples);
             return;
         }
-        return console.log(triple);
         var object = triple.object;
         if(N3Util.isUri(object)) {
             object = '<' + object + '>';
@@ -156,7 +166,6 @@ function parseTextarea() {
 }
 
 function convertToJsonLD(nt) {
-    return console.log(nt);
 
     jsonld.fromRDF(nt, {format: 'application/nquads'}, function(err, doc) {
       // doc is JSON-LD
@@ -165,14 +174,33 @@ function convertToJsonLD(nt) {
 }
 
 function parseJsonLd(jsonldDoc) {
-    return console.log(jsonldDoc);
-    var graph = jsonld['@graph'];
+    /*
+      var word_array = [
+          {text: "Lorem", weight: 15},
+          {text: "Ipsum", weight: 9},
+          {text: "Dolor", weight: 6, html: {title: "I can haz any html attribute"}},
+          {text: "Sit", weight: 7},
+          {text: "Foo", weight: 29},
+          {text: "Luca Is awesome", weight: 4},
+          {text: "Luca Is awesome", weight: 4},
+          {text: "Fin", weight: 10},
+          {text: "Albeit", weight: 12},
+          {text: "Nudo", weight: 18},
+          {text: "Amet", weight: 5}
+          // ...as many words as you want
+      ];
+
+    $("#cont").jQCloud(word_array);
+    */
+
+    var word_array = [];
+    var graph = jsonldDoc['@graph'];
     if(!graph) graph = jsonldDoc;
 
-    filled_areas = []; // reset it otherwise leaks
     for(var i=0; i<graph.length; i++) {
         var obj = graph[i];
         if($.inArray('http://rdfs.org/ns/void#Dataset', obj['@type']) > -1) {
+
             var title = obj['http://purl.org/dc/terms/title']
             if(title && title.length) {
                 title = title[0]['@value'];
@@ -180,18 +208,35 @@ function parseJsonLd(jsonldDoc) {
             if(!title) {
                 title = obj['@id']
             }
-            var circle = createCircle(title)
-            circle.attr('id', obj['@id']);
-            $('#cont')
-                .append(circle)
-
-            positionCircle(circle);
+            word_array.push({
+                text: title,
+                weight: Math.random()
+            });
 
         }
     }
 
+    $("#cont").jQCloud(word_array, {
+
+        afterCloudRender: function() {
+            // adjust circles!
+            $('.inner').each(function() {
+                console.log(this);
+                var $this = $(this);
+                var $parent = $this.parent();
+                $this.css({
+                    top: ($parent.height() / 2) - ($this.height() / 2),
+                    left: ($parent.width() / 2) - ($this.width() / 2)
+                });
+            });
+        }
+    });
+
+
+    return;
+
+
     // do linkset
-    console.log(JSON.stringify(graph,null,3));
     for(var i=0; i<graph.length; i++) {
         var obj = graph[i];
         var subject, object;
@@ -222,31 +267,35 @@ $('button.parse').click(function() {
 
 function positionCircle(circle) {
     // random size
+    // each bubble size of
+    /*
     var totalWidth = 0;
     var min = 70;
     var max = 160;
     // and the formula is:
     var random = Math.floor(Math.random() * (max - min + 1)) + min;
     circle.css({
-        width: random,
-        height: random
+        width: max,
+        height: max
     });
+    */
 
     // adjust inner text
-    var fontSize = 14 - max;
+    var fontSize = 14;
     var $inner = circle.find('.inner');
     var innerHeight = $inner.height();
     var innerWidth = $inner.width();
+    if(innerWidth > circle.width()) {
+        fontSize = 10;
+    }
     $inner.css({
-        top: (circle.height() / 2) - (innerHeight / 2),
-        left: (circle.width() / 2) - (innerWidth / 2),
-        'font-size': fontSize + 'px'
-
-
+        top: (circle.height() / 2) - ($inner.height() / 2),
+        left: (circle.width() / 2) - ($inner.width() / 2)
     });
 
 
     // put circle randomly in position
+    /*
     var rand_x=0;
     var rand_y=0;
     var area;
@@ -262,6 +311,7 @@ function positionCircle(circle) {
         left:rand_x, 
         top: rand_y
     });
+    */
 
 }
 
