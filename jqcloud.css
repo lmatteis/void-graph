@@ -12,37 +12,38 @@ div.jqcloud a {
 }
 
 div.jqcloud span.w10 { 
-width:190px !important; 
-height:190px !important;
-font-size: 230%; }
-div.jqcloud span.w9 { 
-width:180px !important; 
-height:180px !important;
-font-size: 220%; }
-div.jqcloud span.w8 { 
 width:170px !important; 
 height:170px !important;
+font-size: 150%; }
+div.jqcloud span.w9 { 
+width:165px !important; 
+height:165px !important;
+font-size: 145%; }
+div.jqcloud span.w8 { 
+width:160px !important; 
+height:160px !important;
 
 font-size: 210%; }
 div.jqcloud span.w7 { 
 width:160px !important; 
 height:160px !important;
-font-size: 200%; }
+font-size: 140%; }
+
 div.jqcloud span.w6 { 
 width:150px !important; 
 height:150px !important;
+font-size: 135%; }
 
-font-size: 150%; }
 div.jqcloud span.w5 { 
-
 width:140px !important; 
 height:140px !important;
-font-size: 140%; }
-div.jqcloud span.w4 { 
+font-size: 130%; }
 
+div.jqcloud span.w4 { 
 width:130px !important; 
 height:130px !important;
 font-size: 130%; }
+
 div.jqcloud span.w3 { 
 width:120px !important; 
 height:120px !important;

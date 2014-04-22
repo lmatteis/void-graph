@@ -39,6 +39,7 @@ box-shadow: 10px 10px 51px -29px rgba(0,0,0,0.75);
 }
 .inner
 {
+    color: #313131;
     position: absolute;
 }
 .arrow {
@@ -50,7 +51,7 @@ position: absolute;
 
 .line {
 width: 100%;
-background: #000;
+background: #313131;
 height: 1px;
 top: 50%;
 margin-top: -0.5px;
@@ -61,7 +62,7 @@ width: 0;
 height: 0;
 border-top: 3px solid transparent;
 border-bottom: 3px solid transparent;
-border-left: 14px solid #000;
+border-left: 14px solid #313131;
 position: absolute;
 
 }
@@ -147,29 +148,98 @@ function check_overlap(area) {
 }
 $(function() {
 
+var N3Util = N3.Util;
 parseTextarea();
 function parseTextarea() {
     var parser = N3.Parser();
-    var N3Util = N3.Util;
-    var ntriples = '';
+    var word_array = [];
+
+    var all = {};
+    var datasets = [];
+    var linksets = [];
     parser.parse($('textarea').val(), function (error, triple, prefixes) {
         if(!triple) {
-            convertToJsonLD(ntriples);
+            parseAll(all, datasets, linksets);
             return;
         }
-        var object = triple.object;
-        if(N3Util.isUri(object)) {
-            object = '<' + object + '>';
+        all[triple.subject] = all[triple.subject] || {};
+        if(all[triple.subject][triple.predicate]) { // make it an array with this inside
+            all[triple.subject][triple.predicate] = [all[triple.subject][triple.predicate]];
+            all[triple.subject][triple.predicate].push(triple.object);
+
+        } else {
+            all[triple.subject][triple.predicate] = triple.object;
         }
-        ntriples += '<' +triple.subject + '> <' + triple.predicate + '> ' + object + ' .\n'; 
+
+        if(triple.object == 'http://rdfs.org/ns/void#Dataset') {
+            datasets.push(triple.subject);
+        } else if(triple.object == 'http://rdfs.org/ns/void#Linkset') {
+            linksets.push(triple.subject);
+        }
     });
 }
 
 function convertToJsonLD(nt) {
-
     jsonld.fromRDF(nt, {format: 'application/nquads'}, function(err, doc) {
       // doc is JSON-LD
       parseJsonLd(doc);
+    });
+}
+function parseAll(all, datasets, linksets) {
+    var word_array = [];
+    for(var i=0, len = datasets.length; i < len; i++) {
+        var word = {};
+
+        word.uri = datasets[i];
+        // get rest from all
+        var obj = all[datasets[i]];
+        
+        word.text = obj['http://purl.org/dc/terms/title'];
+        if(!word.text) {
+            word.text = word.uri;
+        }
+        if(N3Util.isLiteral(word.text)) {
+            word.text = N3Util.getLiteralValue(word.text);
+        }
+
+        var numTriples = obj['http://rdfs.org/ns/void#triples'];
+        if(N3Util.isLiteral(obj['http://rdfs.org/ns/void#triples'])) {
+            numTriples = N3Util.getLiteralValue(obj['http://rdfs.org/ns/void#triples']);
+        }
+        word.weight = numTriples || Math.random();
+
+        word_array.push(word);
+    }
+    $("#cont").jQCloud(word_array, {
+
+        afterCloudRender: function() {
+            // adjust text!
+            $('.inner, .circle').each(function() {
+                var $this = $(this);
+                var $parent = $this.parent();
+                $this.css({
+                    top: ($parent.height() / 2) - ($this.height() / 2),
+                    left: ($parent.width() / 2) - ($this.width() / 2)
+                });
+            });
+            // connect!
+            // do linkset
+            for(var i=0, len = linksets.length; i < len; i++) {
+                var obj = all[linksets[i]];
+                if(obj['http://rdfs.org/ns/void#target']) {
+                    subject = obj['http://rdfs.org/ns/void#target'][0];
+                    object = obj['http://rdfs.org/ns/void#target'][1];
+                } else if(obj['http://rdfs.org/ns/void#objectsTarget']) {
+                    subject = obj['http://rdfs.org/ns/void#subjectsTarget']
+                    object = obj['http://rdfs.org/ns/void#objectsTarget'];
+                }
+                var subjectCircle = $('[uri="'+subject+'"] .circle');
+                var objectCircle = $('[uri="'+object+'"] .circle');
+                if(subjectCircle.length && objectCircle.length) {
+                    connect(subjectCircle, objectCircle, '#0f0', 5);
+                }
+            }
+        }
     });
 }
 
