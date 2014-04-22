@@ -305,17 +305,25 @@ function parseAll(all, datasets, linksets) {
                 tryWord($this, circleWidth, words, 0, elems)
 
                 // align them now
-                /*
+                var fullHeight = 0;
                 for(var i=0; i<elems.length; i++) {
-                    var bbox = elems[i].getBBox();
+                    var $elem = elems[i];
+                    var bbox = $elem.get(0).getBBox();
                     var width = bbox.width;
                     var height = bbox.height;
+                    fullHeight += height;
 
-                    var $elems = $(elems[i])
+                    //$elem.attr('y', parseFloat($circle.attr('cy'), 10) + (height * i));
+
+                    /*
                     var diff = $elems.attr('y') - $circle.attr('cy');
-                    $elems.attr('y', $elems.attr('y'));
+                    */
                 }
-                */
+                for(var i=0; i<elems.length; i++) {
+                    var $elem = elems[i];
+                    $elem.attr('y', parseFloat($elem.attr('y'), 10) - (fullHeight / 2));
+
+                }
 
             });
             function tryWord($textElem, circleWidth, words, idx, elems) {

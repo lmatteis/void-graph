@@ -244,7 +244,7 @@
         var textTop = top;
         var textLeft = left;
         var fontSize = weight * 3;
-        var $text = $svg.append('<text x="'+textLeft+'" y="'+textTop+'" text-anchor="middle" alignment-baseline="middle" style="font-size: '+fontSize+'px; width:50px">'+text+'</text>')
+        var $text = $svg.append('<text x="'+textLeft+'" y="'+textTop+'" text-anchor="middle" alignment-baseline="hanging" style="font-size: '+fontSize+'px; width:50px">'+text+'</text>')
 
       }
 
