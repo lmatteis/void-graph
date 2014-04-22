@@ -97,7 +97,7 @@ function getCenter($circle) {
 
     return { top: (top + (height / 2)), left: (left + (width/2)) };
 }
-function connect($c1, $c2, color, thickness) {
+function connect($c2, $c1, color, thickness) {
     var center1 = { top: parseFloat($c1.attr('cy'), 10), left: parseFloat($c1.attr('cx'), 10) };
     var center2 = { top: parseFloat($c2.attr('cy'), 10), left: parseFloat($c2.attr('cx'), 10) };
 
@@ -109,7 +109,7 @@ function connect($c1, $c2, color, thickness) {
     var y2 = center2.top;
 
     var c1Radius = parseFloat($c1.attr('r'), 10);
-    var c2Radius = parseFloat($c2.attr('r'), 10);
+    var c2Radius = parseFloat($c2.attr('r'), 10) + 10 /* 10 is the margin triangle */;
 
     var angle = Math.atan2((y1-y2),(x1-x2))*(180/Math.PI);
 
@@ -156,9 +156,13 @@ function connect($c1, $c2, color, thickness) {
     var angle = Math.atan2((y1-y2),(x1-x2))*(180/Math.PI);
     */
     // make arrow
-    var $arrow = '<line xmlns="http://www.w3.org/2000/svg" x1="'+x1+'" y1="'+y1+'" x2="'+x2+'" y2="'+y2+'" marker-end="url(#arrowhead-end-width1)" class="links width1 from-world-bank-linked-data to-dbpedia"/>'
+    function getRandomArbitary (min, max) {
+        return Math.random() * (max - min) + min;
+    }
+    var $arrow = '<line xmlns="http://www.w3.org/2000/svg" x1="'+x1+'" y1="'+y1+'" x2="'+x2+'" y2="'+y2+'" marker-end="url(#arrowhead-end-width1)" class="links" style="stroke-width: '+getRandomArbitary(0.4, 3)+';"/>'
     //var $arrow = $("<div class='arrow' style='z-index:-1;padding:0px; margin:0px; position:absolute; left:" + cx + "px; top:" + cy + "px; width:" + length + "px; -moz-transform:rotate(" + angle + "deg); -webkit-transform:rotate(" + angle + "deg); -o-transform:rotate(" + angle + "deg); -ms-transform:rotate(" + angle + "deg); transform:rotate(" + angle + "deg);'><div class='line'></div><div class='point right' style='right: "+(($c1.width()/2))+"px'></div></div>");
         
+    // prepend otherwise it hovers the circles
     $('svg').prepend($arrow);
 }
 
@@ -2444,7 +2448,7 @@ fao-dataset:fao
 
 .shadow { fill-opacity: 0.6; }
 .links { stroke: #363636; stroke-linecap: square; }
-.width1 { stroke-width: 1; }
+.width1 { stroke-width: 0.5; }
 .width2 { stroke-width: 2; }
 .width3 { stroke-width: 4; }
 .arrowhead { fill: #363636; }
@@ -2467,10 +2471,7 @@ fao-dataset:fao
             <feMergeNode in="SourceGraphic"/> 
           </feMerge>
         </filter>
-        <marker xmlns="http://www.w3.org/2000/svg" markerUnits="userSpaceOnUse" refX="0" refY="5" markerWidth="14" markerHeight="14" orient="auto" viewBox="0 0 13 10" id="arrowhead-end-width3-weak" style="overflow:visible" class="weak">
-            <path d="M 0,0 13,5 0,10 z" id="arrowhead-end" style="fill:#363636"/>
-        </marker>
-        <marker xmlns="http://www.w3.org/2000/svg" markerUnits="userSpaceOnUse" refX="0" refY="5" markerWidth="7" markerHeight="7" orient="auto" viewBox="0 0 13 10" id="arrowhead-end-width1" style="overflow:visible">
+        <marker xmlns="http://www.w3.org/2000/svg" markerUnits="userSpaceOnUse" refX="0" refY="5" markerWidth="10" markerHeight="10" orient="auto" viewBox="0 0 13 10" id="arrowhead-end-width1" style="overflow:visible">
               <path d="M 0,0 13,5 0,10 z" id="arrowhead-end" style="fill:#363636"/>
         </marker>
       </defs>
