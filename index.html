@@ -101,19 +101,20 @@ function connect($c1, $c2, color, thickness) {
     var center1 = { top: parseFloat($c1.attr('cy'), 10), left: parseFloat($c1.attr('cx'), 10) };
     var center2 = { top: parseFloat($c2.attr('cy'), 10), left: parseFloat($c2.attr('cx'), 10) };
 
-    // bottom left
+    // first circle
     var x1 = center1.left;
     var y1 = center1.top;
-    // top right
+    // second circle
     var x2 = center2.left;
     var y2 = center2.top;
 
     var c1Radius = parseFloat($c1.attr('r'), 10);
     var c2Radius = parseFloat($c2.attr('r'), 10);
 
-    var angle = Math.atan2((y1-y2),(x1-x2))*(360/Math.PI);
-    var cos = Math.cos(angle);
-    var sin = Math.sin(angle);
+    var angle = Math.atan2((y1-y2),(x1-x2))*(180/Math.PI);
+
+    var cos = Math.cos(angle * Math.PI / 180);
+    var sin = Math.sin(angle * Math.PI / 180);
 
     var c1adjacent = cos * c1Radius;
     var c1opposite = sin * c1Radius;
@@ -121,12 +122,12 @@ function connect($c1, $c2, color, thickness) {
     var c2adjacent = cos * c2Radius;
     var c2opposite = sin * c2Radius;
 
-
-    x1 += (c1adjacent);
-    y1 += (c1opposite);
+    x1 += -(c1adjacent);
+    y1 += -(c1opposite);
 
     x2 += (c2adjacent);
     y2 += (c2opposite);
+
 
     // distance
     //var length = Math.sqrt(((x2-x1) * (x2-x1)) + ((y2-y1) * (y2-y1)));
@@ -158,7 +159,7 @@ function connect($c1, $c2, color, thickness) {
     var $arrow = '<line xmlns="http://www.w3.org/2000/svg" x1="'+x1+'" y1="'+y1+'" x2="'+x2+'" y2="'+y2+'" marker-end="url(#arrowhead-end-width1)" class="links width1 from-world-bank-linked-data to-dbpedia"/>'
     //var $arrow = $("<div class='arrow' style='z-index:-1;padding:0px; margin:0px; position:absolute; left:" + cx + "px; top:" + cy + "px; width:" + length + "px; -moz-transform:rotate(" + angle + "deg); -webkit-transform:rotate(" + angle + "deg); -o-transform:rotate(" + angle + "deg); -ms-transform:rotate(" + angle + "deg); transform:rotate(" + angle + "deg);'><div class='line'></div><div class='point right' style='right: "+(($c1.width()/2))+"px'></div></div>");
         
-    $('svg').append($arrow);
+    $('svg').prepend($arrow);
 }
 
 
