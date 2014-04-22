@@ -15,7 +15,7 @@ height: 1000px;
     font-family: Tahoma;
 }
 #cont {
-    width: 1000px;
+    width: 1500px;
     height: 1000px;
 }
 .circle {
@@ -98,26 +98,67 @@ function getCenter($circle) {
     return { top: (top + (height / 2)), left: (left + (width/2)) };
 }
 function connect($c1, $c2, color, thickness) {
-    var center1 = getCenter($c1);
-    var center2 = getCenter($c2);
+    var center1 = { top: parseFloat($c1.attr('cy'), 10), left: parseFloat($c1.attr('cx'), 10) };
+    var center2 = { top: parseFloat($c2.attr('cy'), 10), left: parseFloat($c2.attr('cx'), 10) };
 
-    // bottom right
+    // bottom left
     var x1 = center1.left;
     var y1 = center1.top;
     // top right
     var x2 = center2.left;
     var y2 = center2.top;
+
+    var c1Radius = parseFloat($c1.attr('r'), 10);
+    var c2Radius = parseFloat($c2.attr('r'), 10);
+
+    var angle = Math.atan2((y1-y2),(x1-x2))*(360/Math.PI);
+    var cos = Math.cos(angle);
+    var sin = Math.sin(angle);
+
+    var c1adjacent = cos * c1Radius;
+    var c1opposite = sin * c1Radius;
+
+    var c2adjacent = cos * c2Radius;
+    var c2opposite = sin * c2Radius;
+
+
+    x1 += (c1adjacent);
+    y1 += (c1opposite);
+
+    x2 += (c2adjacent);
+    y2 += (c2opposite);
+
     // distance
-    var length = Math.sqrt(((x2-x1) * (x2-x1)) + ((y2-y1) * (y2-y1)));
+    //var length = Math.sqrt(((x2-x1) * (x2-x1)) + ((y2-y1) * (y2-y1)));
+    
+    /*
+    if(x1 > x2) { // pointing left
+        x1 -= c1adjacent;
+        y1 -= c1opposite;
+
+        x2 += c2adjacent;
+        y2 += c2opposite;
+    } else if(x1 < x2) { // pointing right
+        x1 -= c1adjacent;
+        y1 -= c1opposite;
+
+        x2 += c2adjacent;
+        y2 += c2opposite;
+    }
+    */
+
+    /*
     // center
     var cx = ((x1 + x2) / 2) - (length / 2);
     var cy = ((y1 + y2) / 2) - (thickness / 2);
     // angle
     var angle = Math.atan2((y1-y2),(x1-x2))*(180/Math.PI);
+    */
     // make arrow
-    var $arrow = $("<div class='arrow' style='z-index:-1;padding:0px; margin:0px; position:absolute; left:" + cx + "px; top:" + cy + "px; width:" + length + "px; -moz-transform:rotate(" + angle + "deg); -webkit-transform:rotate(" + angle + "deg); -o-transform:rotate(" + angle + "deg); -ms-transform:rotate(" + angle + "deg); transform:rotate(" + angle + "deg);'><div class='line'></div><div class='point right' style='right: "+(($c1.width()/2))+"px'></div></div>");
+    var $arrow = '<line xmlns="http://www.w3.org/2000/svg" x1="'+x1+'" y1="'+y1+'" x2="'+x2+'" y2="'+y2+'" marker-end="url(#arrowhead-end-width1)" class="links width1 from-world-bank-linked-data to-dbpedia"/>'
+    //var $arrow = $("<div class='arrow' style='z-index:-1;padding:0px; margin:0px; position:absolute; left:" + cx + "px; top:" + cy + "px; width:" + length + "px; -moz-transform:rotate(" + angle + "deg); -webkit-transform:rotate(" + angle + "deg); -o-transform:rotate(" + angle + "deg); -ms-transform:rotate(" + angle + "deg); transform:rotate(" + angle + "deg);'><div class='line'></div><div class='point right' style='right: "+(($c1.width()/2))+"px'></div></div>");
         
-    $(document.body).append($arrow);
+    $('svg').append($arrow);
 }
 
 
@@ -214,6 +255,7 @@ function parseAll(all, datasets, linksets) {
 
         afterCloudRender: function() {
             // adjust text!
+            /*
             $('.inner, .circle').each(function() {
                 var $this = $(this);
                 var $parent = $this.parent();
@@ -222,6 +264,7 @@ function parseAll(all, datasets, linksets) {
                     left: ($parent.width() / 2) - ($this.width() / 2)
                 });
             });
+            */
             // connect!
             // do linkset
             for(var i=0, len = linksets.length; i < len; i++) {
@@ -233,12 +276,13 @@ function parseAll(all, datasets, linksets) {
                     subject = obj['http://rdfs.org/ns/void#subjectsTarget']
                     object = obj['http://rdfs.org/ns/void#objectsTarget'];
                 }
-                var subjectCircle = $('[uri="'+subject+'"] .circle');
-                var objectCircle = $('[uri="'+object+'"] .circle');
+                var subjectCircle = $('[uri="'+subject+'"]');
+                var objectCircle = $('[uri="'+object+'"]');
                 if(subjectCircle.length && objectCircle.length) {
                     connect(subjectCircle, objectCircle, '#0f0', 5);
                 }
             }
+            $("#cont").html($("#cont").html());
         }
     });
 }
@@ -2367,7 +2411,71 @@ fao-dataset:fao
 <br>
 <button class="parse">parse</button>
 </div>
-<div style="position:relative;" id="cont"></div>
+<div style="position:relative;" id="cont">
+    <svg xmlns="http://www.w3.org/2000/svg" version="1.1">
+<style xmlns="http://www.w3.org/2000/svg" type="text/css" id="style6">
+.dataset circle { fill: #fff; stroke: #0000EE; stroke-width: 1; }
+
+.dataset.media circle { fill: #E2EAFF; stroke: #2866C4; }
+.dataset.geographic circle { fill: #FFEFA6; stroke: #996633; }
+.dataset.publications circle { fill: #E4FFC9; stroke: #30C32D; }
+.dataset.usergeneratedcontent circle { fill: #FFE9D8; stroke: #FF5D33; }
+.dataset.government circle { fill: #C5FFE5; stroke: #11C2A2; }
+.dataset.crossdomain circle { fill: #E6F6F4; stroke: #2E4439; }
+.dataset.lifesciences circle { fill: #F4D6E2; stroke: #C31A8A; }
+
+.dataset circle { stroke-width: 2; }
+.dataset.legal circle { fill: #FFF; stroke: #EB0; }
+#.dataset.legal text { fill: #996633; }
+.dataset.business circle { fill: #FFF; stroke: #EB0; }
+#.dataset.business text { fill: #607; }
+.dataset.eu-institution circle { fill: #FFF; stroke: #EB0; }
+#.dataset.eu-institution text { fill: #30C32D; }
+.dataset.thirdparty circle { fill: #FFF; stroke: #28C466; }
+#.dataset.thirdparty text { fill: #050; }
+.dataset.producer circle { fill: #FFF; stroke: #2866C4; }
+#.dataset.producer text { fill: #007; }
+.dataset.non-eu circle { fill: #FFF; stroke: #DDD; }
+.dataset.non-eu text { fill: #333; }
+.shadow.weak { fill-opacity: 0.2; }
+#.links.weak, .weak .arrowhead { stroke-opacity: 0.4; fill-opacity: 0.4; }
+.links.weak, .weak .arrowhead { stroke: #AAA; fill: #AAA; }
+
+.shadow { fill-opacity: 0.6; }
+.links { stroke: #363636; stroke-linecap: square; }
+.width1 { stroke-width: 1; }
+.width2 { stroke-width: 2; }
+.width3 { stroke-width: 4; }
+.arrowhead { fill: #363636; }
+
+
+.label, .footer-text, #layer-legend text { font-weight:bold;font-family:sans-serif; text-rendering: geometricPrecision; }
+.label { text-anchor: middle; }
+.footer-text { text-anchor: end; }
+#layer-legend text { text-anchor: end; fill: #363636; }
+  </style>
+      <defs>
+        <filter xmlns="http://www.w3.org/2000/svg" id="dropshadow" height="130%">
+          <feGaussianBlur in="SourceAlpha" stdDeviation="3"/> 
+          <feOffset dx="3" dy="3" result="offsetblur"/>
+          <feComponentTransfer>
+            <feFuncA type="linear" slope="0.2"/>
+          </feComponentTransfer>
+          <feMerge> 
+            <feMergeNode/>
+            <feMergeNode in="SourceGraphic"/> 
+          </feMerge>
+        </filter>
+        <marker xmlns="http://www.w3.org/2000/svg" markerUnits="userSpaceOnUse" refX="0" refY="5" markerWidth="14" markerHeight="14" orient="auto" viewBox="0 0 13 10" id="arrowhead-end-width3-weak" style="overflow:visible" class="weak">
+            <path d="M 0,0 13,5 0,10 z" id="arrowhead-end" style="fill:#363636"/>
+        </marker>
+        <marker xmlns="http://www.w3.org/2000/svg" markerUnits="userSpaceOnUse" refX="0" refY="5" markerWidth="7" markerHeight="7" orient="auto" viewBox="0 0 13 10" id="arrowhead-end-width1" style="overflow:visible">
+              <path d="M 0,0 13,5 0,10 z" id="arrowhead-end" style="fill:#363636"/>
+        </marker>
+      </defs>
+
+    </svg>
+</div>
 </body>
 </html>
 

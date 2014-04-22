@@ -46,8 +46,17 @@
       var hitTest = function(elem, other_elems) {
         // Pairwise overlap detection
         var overlapping = function(a, b) {
-          if (Math.abs(2.0*a.offsetLeft + a.offsetWidth - 2.0*b.offsetLeft - b.offsetWidth) < a.offsetWidth + b.offsetWidth) {
-            if (Math.abs(2.0*a.offsetTop + a.offsetHeight - 2.0*b.offsetTop - b.offsetHeight) < a.offsetHeight + b.offsetHeight) {
+          var aRadius = parseInt(a.attr('r'), 10) + 10;
+          var bRadius = parseInt(b.attr('r'), 10) + 10;
+          var aPos = { left: a.attr('cx') - aRadius, top: a.attr('cy') - aRadius };
+          var bPos = { left: b.attr('cx') - bRadius, top: b.attr('cy') - bRadius };
+          var aWidth = aRadius * 2;
+          var bWidth = bRadius * 2;
+          var aHeight = aWidth;
+          var bHeight = bWidth;
+          
+          if (Math.abs(2.0*aPos.left + aWidth - 2.0*bPos.left - bWidth) < aWidth + bWidth) {
+            if (Math.abs(2.0*aPos.top + aHeight - 2.0*bPos.top - bHeight) < aHeight + bHeight) {
               return true;
             }
           }
@@ -105,9 +114,10 @@
         if (word_array[0].weight > word_array[word_array.length - 1].weight) {
           // Linearly map the original weight to a discrete scale from 1 to 10
           weight = Math.round((word.weight - word_array[word_array.length - 1].weight) /
-                              (word_array[0].weight - word_array[word_array.length - 1].weight) * 9.0) + 1;
+                              (word_array[0].weight - word_array[word_array.length - 1].weight) * 4) + 4;
         }
-        word_span = $('<span>').attr(word.html).addClass('w' + weight + " " + custom_class);
+        //word_span = $('<span>').attr(word.html).addClass('w' + weight + " " + custom_class);
+        word_span = $('<circle r="30" cx="50" cy="50" style="stroke:rgb(40, 102, 195); fill:white; stroke-width:1.5px" filter="url(#dropshadow)" />').attr('r', 10 * weight);
 
         // Append link if word.url attribute was set
         if (word.link) {
@@ -126,7 +136,7 @@
           inner_html = word.text;
         }
         word_span.attr('uri', word.uri);
-        word_span.append('<div class="circle"><div class="inner">'+ inner_html + '</div></div>');
+        //word_span.append('<div class="circle"><div class="inner">'+ inner_html + '</div></div>');
 
         // Bind handlers to words
         if (!!word.handlers) {
@@ -137,20 +147,26 @@
           }
         }
 
-        $this.append(word_span);
+        $('svg')
+            .append(word_span)
 
-        var width = word_span.width(),
-            height = word_span.height(),
+        var width = word_span.attr('r') * 2,
+            height = width,
             left = options.center.x - width / 2.0,
             top = options.center.y - height / 2.0;
 
         // Save a reference to the style property, for better performance
+        word_span.attr('cx', left);
+        word_span.attr('cy', top);
+        
+/*
         var word_style = word_span[0].style;
         word_style.position = "absolute";
         word_style.left = left + "px";
         word_style.top = top + "px";
 
-        while(hitTest(word_span[0], already_placed_words)) {
+*/
+        while(hitTest(word_span, already_placed_words)) {
           // option shape is 'rectangular' so move the word in a rectangular spiral
           if (options.shape === "rectangular") {
             steps_in_direction++;
@@ -179,9 +195,13 @@
             left = options.center.x - (width / 2.0) + (radius*Math.cos(angle)) * aspect_ratio;
             top = options.center.y + radius*Math.sin(angle) - (height / 2.0);
           }
-          word_style.left = left + "px";
-          word_style.top = top + "px";
+            
+          //word_style.left = left + "px";
+          //word_style.top = top + "px";
+          word_span.attr('cx', left);
+          word_span.attr('cy', top);
         }
+        $('svg').append('<text x="'+left+'" y="'+top+'" text-anchor="middle" style="width:50px">'+word.text+'</text>')
 
         // Don't render word if part of it would be outside the container
         if (options.removeOverflowing && (left < 0 || top < 0 || (left + width) > options.width || (top + height) > options.height)) {
@@ -190,7 +210,7 @@
         }
 
 
-        already_placed_words.push(word_span[0]);
+        already_placed_words.push(word_span);
 
         // Invoke callback if existing
         if ($.isFunction(word.afterWordRender)) {
