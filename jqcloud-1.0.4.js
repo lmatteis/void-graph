@@ -201,7 +201,8 @@
           word_span.attr('cx', left);
           word_span.attr('cy', top);
         }
-        $('svg').append('<text x="'+left+'" y="'+top+'" text-anchor="middle" style="width:50px">'+word.text+'</text>')
+        // split each word
+        alignText(word.text, width, height, weight, left, top);
 
         // Don't render word if part of it would be outside the container
         if (options.removeOverflowing && (left < 0 || top < 0 || (left + width) > options.width || (top + height) > options.height)) {
@@ -233,6 +234,19 @@
           }
         }
       };
+      function alignText(text, width, height, weight, left, top) {
+        /*
+        var bbox = text.getBBox();
+        var width = bbox.width;
+        var height = bbox.height;
+        */
+        var $svg = $('svg');
+        var textTop = top;
+        var textLeft = left;
+        var fontSize = weight * 3;
+        var $text = $svg.append('<text x="'+textLeft+'" y="'+textTop+'" text-anchor="middle" alignment-baseline="middle" style="font-size: '+fontSize+'px; width:50px">'+text+'</text>')
+
+      }
 
       // Iterate drawOneWord on every word. The way the iteration is done depends on the drawing mode (delayedMode is true or false)
       if (options.delayedMode){

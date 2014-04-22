@@ -287,7 +287,74 @@ function parseAll(all, datasets, linksets) {
                     connect(subjectCircle, objectCircle, '#0f0', 5);
                 }
             }
+
             $("#cont").html($("#cont").html());
+
+            // do text
+            // after we drew it
+            $('svg text').each(function() {
+                var that = this;
+                var $this = $(this);
+                var $circle = $this.prev();
+                var circleWidth = $circle.attr('r') * 2;
+
+                var words = $this.text().split(' ')
+
+                // try first word
+                var elems = [$this];
+                tryWord($this, circleWidth, words, 0, elems)
+
+                // align them now
+                /*
+                for(var i=0; i<elems.length; i++) {
+                    var bbox = elems[i].getBBox();
+                    var width = bbox.width;
+                    var height = bbox.height;
+
+                    var $elems = $(elems[i])
+                    var diff = $elems.attr('y') - $circle.attr('cy');
+                    $elems.attr('y', $elems.attr('y'));
+                }
+                */
+
+            });
+            function tryWord($textElem, circleWidth, words, idx, elems) {
+                if(!words[idx]) { 
+                    return;
+                }
+                if($textElem.text() == '' || idx == 0) {
+                    $textElem.text(words[idx])
+                } else {
+                    var cpy = $textElem.text();
+                    $textElem.text($textElem.text() + ' ' + words[idx])
+                }
+
+                // re-read values
+                var bbox = $textElem.get(0).getBBox();//textElem.getBBox();
+                var width = bbox.width;
+                var height = bbox.height;
+
+                if(width > circleWidth) {
+                    if(idx == 0) { // even first word is longer
+                        // trim it
+                        $textElem.text(words[idx].substr(0, 10))
+                    } else{
+                        // create a new <text>
+                        var $newText = $textElem.clone();
+                        elems.push($newText);
+                        $newText.insertAfter($textElem);
+                        // set it how it was before since we just used the word to measure
+                        $textElem.text(cpy);
+
+                        $newText.text(words[idx]); // set it
+                        $newText.attr('y', parseFloat($newText.attr('y'),10) + circleWidth/6);
+                        return tryWord($newText, circleWidth, words, idx + 1, elems);
+                    }
+
+                }
+
+                tryWord($textElem,circleWidth, words, idx + 1, elems);
+            }
         }
     });
 }
