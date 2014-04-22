@@ -464,10 +464,15 @@ function parseJsonLd(jsonldDoc) {
 }
 
 $('button.parse').click(function() {
-    $('#cont').html('');
     $('.arrow').remove();
-    $('svg').remove();
+    var style = $('svg style').clone();
+    var defs = $('svg defs').clone();
+    $('svg').html('');
+    $('svg').append(style).append(defs);
     parseTextarea();    
+});
+$('button.save').click(function() {
+    open("data:image/svg+xml," + encodeURIComponent($('svg').get(0).outerHTML));
 });
 });
 
@@ -611,7 +616,7 @@ worldbank-dataset:void
 
 worldbank-dataset:meta
     a sd:Graph, void:Dataset ;
-    dcterms:title "Metadata and complimentary data used for all the data in the worldbank-dataset:worldbank dataset"@en ;
+    dcterms:title "Data in the worldbank dataset dataset"@en ;
     dcterms:source [ foaf:homepage <http://data.worldbank.org/data-catalog> ] ;
     dcterms:publisher [ foaf:homepage <http://csarven.ca/> ] ;
     dcterms:created "2012-02-29"^^xsd:date ;
@@ -2211,7 +2216,7 @@ fao-dataset:fao
 
         sd:defaultGraph [
             a sd:Graph, void:Dataset ;
-            dcterms:title "World Bank Linked Data SPARQL Endpoint Description"@en ;
+            dcterms:title "World Bank Linked Data SPARQL Endpoint"@en ;
             dcterms:description "Contains a copy of this SD+VoID file!"@en ;
             void:triples 173639128 ;
         ] ;
@@ -2490,10 +2495,16 @@ fao-dataset:fao
 </textarea>
 <br>
 <button class="parse">parse</button>
+<button class="save">save SVG</button>
 </div>
 <div style="position:relative;" id="cont">
-    <svg xmlns="http://www.w3.org/2000/svg" version="1.1" width="1500" height="1000">
+
+<svg xmlns="http://www.w3.org/2000/svg" version="1.1" width="1500" height="1000">
 <style xmlns="http://www.w3.org/2000/svg" type="text/css" id="style6">
+text {
+
+font-family: "Tahoma","Helvetica", "Arial", sans-serif;
+}
 .dataset circle { fill: #fff; stroke: #0000EE; stroke-width: 1; }
 
 .dataset.media circle { fill: #E2EAFF; stroke: #2866C4; }
