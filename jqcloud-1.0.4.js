@@ -19,11 +19,11 @@
 
     // Default options value
     var default_options = {
-      width: $this.width(),
-      height: $this.height(),
+      width: $this.parent().width(),
+      height: $this.parent().height(),
       center: {
-        x: ((options && options.width) ? options.width : $this.width()) / 2.0,
-        y: ((options && options.height) ? options.height : $this.height()) / 2.0
+        x: ((options && options.width) ? options.width : $this.parent().width()) / 2.0,
+        y: ((options && options.height) ? options.height : $this.parent().height()) / 2.0
       },
       delayedMode: word_array.length > 50,
       shape: false, // It defaults to elliptic shape
@@ -36,7 +36,7 @@
     // Add the "jqcloud" class to the container for easy CSS styling, set container width/height
     //$this.addClass("jqcloud").width(options.width).height(options.height);
     // add css viewBox
-    $this.attr('viewBox', '0 0 '+$this.width()+' '+$this.height());
+    $this.attr('viewBox', '0 0 '+$this.parent().width()+' '+$this.parent().height());
 
     // Container's CSS position cannot be 'static'
     if ($this.css("position") === "static") {
