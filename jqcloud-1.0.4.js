@@ -147,8 +147,10 @@
           }
         }
 
+        var $g = $('<g></g>');
+        $g.append(word_span);
         $('svg')
-            .append(word_span)
+            .append($g)
 
         var width = word_span.attr('r') * 2,
             height = width,
@@ -202,7 +204,7 @@
           word_span.attr('cy', top);
         }
         // split each word
-        alignText(word.text, width, height, weight, left, top);
+        alignText(word.text, width, height, weight, left, top, $g);
 
         // Don't render word if part of it would be outside the container
         if (options.removeOverflowing && (left < 0 || top < 0 || (left + width) > options.width || (top + height) > options.height)) {
@@ -234,7 +236,7 @@
           }
         }
       };
-      function alignText(text, width, height, weight, left, top) {
+      function alignText(text, width, height, weight, left, top, $g) {
         /*
         var bbox = text.getBBox();
         var width = bbox.width;
@@ -243,8 +245,8 @@
         var $svg = $('svg');
         var textTop = top;
         var textLeft = left;
-        var fontSize = weight * 3;
-        var $text = $svg.append('<text x="'+textLeft+'" y="'+textTop+'" text-anchor="middle" alignment-baseline="hanging" style="font-size: '+fontSize+'px; width:50px">'+text+'</text>')
+        var fontSize = weight * 2.8;
+        var $text = $g.append('<text x="'+textLeft+'" y="'+textTop+'" text-anchor="middle" style="font-size: '+fontSize+'px;">'+text+'</text>')
 
       }
 
