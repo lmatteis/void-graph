@@ -134,8 +134,7 @@ function parseAll(all, datasets, linksets) {
 
         word_array.push(word);
     }
-    $("#cont").jQCloud(word_array, {
-
+    $("svg").jQCloud(word_array, {
         afterCloudRender: function() {
             // adjust text!
             /*

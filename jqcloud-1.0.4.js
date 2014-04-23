@@ -34,7 +34,9 @@
     options = $.extend(default_options, options || {});
 
     // Add the "jqcloud" class to the container for easy CSS styling, set container width/height
-    $this.addClass("jqcloud").width(options.width).height(options.height);
+    //$this.addClass("jqcloud").width(options.width).height(options.height);
+    // add css viewBox
+    $this.attr('viewBox', '0 0 '+$this.width()+' '+$this.height());
 
     // Container's CSS position cannot be 'static'
     if ($this.css("position") === "static") {
