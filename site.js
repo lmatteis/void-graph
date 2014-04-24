@@ -80,6 +80,8 @@ function parseTextarea() {
     var datasets = [];
     var linksets = [];
     parser.parse($('textarea').val(), function (error, triple, prefixes) {
+        if(error)
+            console.log(error)
         if(!triple) {
             parseAll(all, datasets, linksets);
             return;
@@ -183,7 +185,6 @@ function parseAll(all, datasets, linksets) {
                             if(subjectCircle.length && objectCircle.length) {
                                 connect(subjectCircle, objectCircle, '#0f0', 5);
                             }
-                            connect(subjectCircle, objectCircle);
                         }
                     })
                 } else { // only a single subset
@@ -192,7 +193,6 @@ function parseAll(all, datasets, linksets) {
                     if(subjectCircle.length && objectCircle.length) {
                         connect(subjectCircle, objectCircle, '#0f0', 5);
                     }
-                    connect(subjectCircle, objectCircle);
                 }
 
             }
