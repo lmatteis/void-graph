@@ -1,4 +1,4 @@
-function connect($c2, $c1, color, thickness) {
+function connect($c1, $c2, color, thickness) {
     var center1 = { top: parseFloat($c1.attr('cy'), 10), left: parseFloat($c1.attr('cx'), 10) };
     var center2 = { top: parseFloat($c2.attr('cy'), 10), left: parseFloat($c2.attr('cx'), 10) };
 
