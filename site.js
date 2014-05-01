@@ -64,7 +64,7 @@ function connect($c1, $c2, color, thickness) {
     //var $arrow = $("<div class='arrow' style='z-index:-1;padding:0px; margin:0px; position:absolute; left:" + cx + "px; top:" + cy + "px; width:" + length + "px; -moz-transform:rotate(" + angle + "deg); -webkit-transform:rotate(" + angle + "deg); -o-transform:rotate(" + angle + "deg); -ms-transform:rotate(" + angle + "deg); transform:rotate(" + angle + "deg);'><div class='line'></div><div class='point right' style='right: "+(($c1.width()/2))+"px'></div></div>");
         
     // prepend otherwise it hovers the circles
-    $('svg').prepend($arrow);
+    $('svg style').after($arrow);
 }
 
 
