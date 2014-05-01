@@ -1,4 +1,7 @@
 /* fonts */
+body {
+ font-family: Verdana;
+}
 
 div.jqcloud {
   font-family: "Helvetica", "Arial", sans-serif;
