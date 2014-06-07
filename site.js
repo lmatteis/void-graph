@@ -239,7 +239,7 @@ var Parser = {
 }; // PArser
 function buildArrows() {
     var linksets = Parser.linksets;
-    var subsets = Parser.subject;
+    var subsets = Parser.subsets;
     var all = Parser.all;
     for(var i=0, len = linksets.length; i < len; i++) {
         var obj = all[linksets[i]];
@@ -257,8 +257,8 @@ function buildArrows() {
         }
     }
     // do void:subset
-    for(var x in this.subsets) {
-        var val = this.subsets[x];
+    for(var x in subsets) {
+        var val = subsets[x];
         if($.isArray(val)) {
             $.each(val, function(idx, value) {
                 // only do Datasets
