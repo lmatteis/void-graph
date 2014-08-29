@@ -6,7 +6,7 @@ Cite as
 
     @misc{1408.6691,
     Author = {Luca Matteis},
-    Title = {VoID-graph: Visualize Linked Datasets on the Web},
+    Title = { {VoID-graph}: Visualize Linked Datasets on the Web},
     Year = {2014},
     Eprint = {arXiv:1408.6691},
     }
